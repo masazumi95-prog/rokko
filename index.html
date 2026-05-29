@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My TOL ヘルスナビゲーター</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal-50:#E1F5EE;--teal-100:#9FE1CB;--teal-400:#1D9E75;
+  --teal-600:#0F6E56;--teal-800:#085041;
+  --gray-50:#F1EFE8;--gray-100:#D3D1C7;--gray-400:#888780;--gray-600:#5F5E5A;
+  --bg:#fff;--bg2:#F7F6F2;--text:#1a1a18;--text2:#5F5E5A;
+  --border:rgba(0,0,0,0.12);--border2:rgba(0,0,0,0.22);
+  --radius-md:8px;--radius-lg:12px;
+}
+body{font-family:'Noto Sans JP',sans-serif;background:#F0EDE6;display:flex;justify-content:center;min-height:100vh;padding:16px 0}
+.app{width:100%;max-width:430px;display:flex;flex-direction:column;background:var(--bg);border-radius:var(--radius-lg);overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08)}
+.header{background:var(--teal-600);padding:16px 20px 14px}
+.logo-row{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.logo-icon{width:34px;height:34px;background:rgba(255,255,255,0.15);border-radius:9px;display:flex;align-items:center;justify-content:center}
+.app-name{font-family:'Noto Serif JP',serif;font-size:18px;font-weight:500;color:#fff}
+.app-sub{font-size:11px;color:rgba(255,255,255,0.7);letter-spacing:.05em}
+.browse-badge{display:inline-flex;align-items:center;gap:4px;margin-top:7px;background:rgba(255,255,255,0.12);border-radius:20px;padding:3px 10px;font-size:11px;color:rgba(255,255,255,0.85)}
+.tab-bar{display:flex;background:var(--bg2);border-bottom:.5px solid var(--border)}
+.tab{flex:1;padding:10px 8px;text-align:center;font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;user-select:none;display:flex;align-items:center;justify-content:center;gap:5px}
+.tab.active{color:var(--teal-600);border-bottom-color:var(--teal-600);background:var(--bg)}
+.panel{display:none;padding:16px;flex-direction:column;gap:12px;background:var(--bg)}
+.panel.active{display:flex}
+.section-label{font-size:11px;font-weight:500;color:var(--teal-600);letter-spacing:.08em;margin-bottom:4px}
+.intro-card{background:var(--teal-50);border-radius:var(--radius-md);padding:12px 14px;border:.5px solid var(--teal-100)}
+.intro-card p{font-size:13px;color:var(--teal-800);line-height:1.65}
+textarea{width:100%;font-family:'Noto Sans JP',sans-serif;font-size:14px;resize:none;border-radius:var(--radius-md);border:.5px solid var(--border2);padding:10px 12px;background:var(--bg);color:var(--text);line-height:1.6}
+textarea:focus{outline:none;border-color:var(--teal-400);box-shadow:0 0 0 2px rgba(29,158,117,.15)}
+.quick-tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:12px;padding:4px 10px;border-radius:20px;background:var(--bg2);border:.5px solid var(--border);color:var(--text2);cursor:pointer;transition:all .15s;user-select:none}
+.tag:hover{background:var(--teal-50);border-color:var(--teal-100);color:var(--teal-800)}
+.btn-primary{background:var(--teal-600);color:#fff;border:none;border-radius:var(--radius-md);padding:11px 16px;font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:opacity .2s;display:flex;align-items:center;justify-content:center;gap:6px;width:100%}
+.btn-primary:hover{opacity:.88}
+.btn-primary:active{transform:scale(.98)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.status-bar{display:none;align-items:center;gap:8px;padding:10px 12px;background:var(--bg2);border-radius:var(--radius-md);border:.5px solid var(--border)}
+.status-bar.visible{display:flex}
+.status-text{font-size:12px;color:var(--text2)}
+.result-card{background:var(--bg);border:.5px solid var(--border);border-radius:var(--radius-lg);padding:12px 14px;border-left:3px solid var(--teal-400)}
+.rc-category{font-size:10px;font-weight:500;color:var(--teal-600);letter-spacing:.06em;margin-bottom:4px}
+.rc-title{font-size:14px;font-weight:500;color:var(--text);margin-bottom:6px;line-height:1.4}
+.rc-desc{font-size:12px;color:var(--text2);line-height:1.55}
+.rc-link{font-size:12px;color:var(--teal-600);margin-top:8px;display:inline-flex;align-items:center;gap:3px;text-decoration:none}
+.rc-link:hover{text-decoration:underline}
+.disclaimer{background:var(--bg2);border-radius:var(--radius-md);padding:10px 12px;border:.5px solid var(--border);font-size:11px;color:var(--text2);line-height:1.5;display:flex;gap:8px;align-items:flex-start}
+.chat-messages{min-height:300px;max-height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:4px 0}
+.msg{display:flex;flex-direction:column;max-width:88%}
+.msg.user{align-self:flex-end;align-items:flex-end}
+.msg.ai{align-self:flex-start;align-items:flex-start}
+.msg-bubble{padding:10px 13px;border-radius:16px;font-size:13px;line-height:1.65}
+.msg.user .msg-bubble{background:var(--teal-600);color:#fff;border-bottom-right-radius:4px}
+.msg.ai .msg-bubble{background:var(--bg2);color:var(--text);border-bottom-left-radius:4px;border:.5px solid var(--border)}
+.msg-time{font-size:10px;color:var(--text2);margin-top:3px;padding:0 4px}
+.ai-avatar{width:26px;height:26px;border-radius:50%;background:var(--teal-50);border:.5px solid var(--teal-100);display:flex;align-items:center;justify-content:center;margin-bottom:4px}
+.chat-input-area{display:flex;gap:8px;align-items:flex-end;border-top:.5px solid var(--border);padding-top:12px}
+.chat-input-area textarea{border-radius:16px;min-height:40px;max-height:100px}
+.send-btn{width:38px;height:38px;border-radius:50%;background:var(--teal-600);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .2s}
+.send-btn:hover{opacity:.85}
+.send-btn:disabled{opacity:.4;cursor:not-allowed}
+.loading-dots{display:inline-flex;gap:3px;align-items:center;padding:4px 0}
+.loading-dots span{width:6px;height:6px;border-radius:50%;background:var(--gray-400);animation:bounce 1.2s infinite}
+.loading-dots span:nth-child(2){animation-delay:.2s}
+.loading-dots span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+.quick-qs{display:flex;flex-direction:column;gap:5px}
+.quick-q{font-size:12px;padding:7px 12px;background:var(--bg2);border:.5px solid var(--border);border-radius:var(--radius-md);color:var(--text2);cursor:pointer;text-align:left;transition:background .15s;display:flex;align-items:center;gap:6px}
+.quick-q:hover{background:var(--teal-50);color:var(--teal-800);border-color:var(--teal-100)}
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+.pulse{width:8px;height:8px;border-radius:50%;background:var(--teal-400);animation:pulse 1.5s infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.results-area{display:flex;flex-direction:column;gap:10px}
+.no-result{text-align:center;padding:20px;font-size:13px;color:var(--text2);line-height:1.6}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="logo-row">
+      <div class="logo-icon"><i class="ti ti-heartbeat" style="font-size:16px;color:#fff" aria-hidden="true"></i></div>
+      <div>
+        <div class="app-name">My TOL ヘルスナビゲーター</div>
+        <div class="app-sub">朴澤耳鼻咽喉科 × Tree of Life</div>
+      </div>
+    </div>
+    <div class="browse-badge">
+      <i class="ti ti-database" style="font-size:12px" aria-hidden="true"></i>
+      ブログ571記事から推薦
+    </div>
+  </div>
+  <div class="tab-bar">
+    <div class="tab active" onclick="switchTab('checker')" id="tab-checker">
+      <i class="ti ti-stethoscope" style="font-size:15px" aria-hidden="true"></i>症状チェック
+    </div>
+    <div class="tab" onclick="switchTab('chat')" id="tab-chat">
+      <i class="ti ti-message-circle" style="font-size:15px" aria-hidden="true"></i>AI相談
+    </div>
+  </div>
+  <div class="panel active" id="panel-checker">
+    <div class="intro-card"><p>お悩みを入力すると、AIがブログ571記事の中から最も関連する記事を推薦します。</p></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div class="section-label">お悩みを入力</div>
+      <textarea id="symptom-input" placeholder="例：花粉症がひどい、声がかすれる、のどの違和感が続く など…" rows="3"></textarea>
+      <div>
+        <div class="section-label" style="margin-bottom:6px">よくあるお悩み</div>
+        <div class="quick-tags">
+          <span class="tag" onclick="setSymptom('花粉症がつらい')">花粉症</span>
+          <span class="tag" onclick="setSymptom('声のかすれが続いている')">声のかすれ</span>
+          <span class="tag" onclick="setSymptom('えへん虫（のどの違和感）が気になる')">えへん虫</span>
+          <span class="tag" onclick="setSymptom('慢性的な疲れやすさがある')">疲れやすい</span>
+          <span class="tag" onclick="setSymptom('耳鳴りや難聴が気になる')">耳鳴り</span>
+          <span class="tag" onclick="setSymptom('腸の不調・SIBOが心配')">腸の不調</span>
+          <span class="tag" onclick="setSymptom('めまいがする')">めまい</span>
+          <span class="tag" onclick="setSymptom('ホメオパシーを試してみたい')">ホメオパシー</span>
+          <span class="tag" onclick="setSymptom('自律神経を整えたい')">自律神経</span>
+          <span class="tag" onclick="setSymptom('睡眠の質を改善したい')">睡眠</span>
+        </div>
+      </div>
+      <button class="btn-primary" id="check-btn" onclick="runChecker()">
+        <i class="ti ti-search" aria-hidden="true"></i>関連記事を探す ↗
+      </button>
+    </div>
+    <div class="status-bar" id="status-bar">
+      <div class="pulse"></div>
+      <span class="status-text" id="status-text">記事を検索中…</span>
+    </div>
+    <div class="results-area" id="checker-results"></div>
+    <div class="disclaimer">
+      <i class="ti ti-info-circle" style="font-size:16px;color:var(--gray-400);flex-shrink:0;margin-top:1px" aria-hidden="true"></i>
+      <span>このサービスはAIによる情報提供であり、医療診断ではありません。症状が続く場合は必ず医師にご相談ください。</span>
+    </div>
+  </div>
+  <div class="panel" id="panel-chat">
+    <div class="section-label" style="margin-bottom:2px">よくある質問から選ぶ</div>
+    <div class="quick-qs">
+      <button class="quick-q" onclick="sendQuickQ('ホメオパシーとはどんな治療法ですか？')"><i class="ti ti-leaf" style="font-size:14px;color:var(--teal-600)" aria-hidden="true"></i>ホメオパシーとはどんな治療法ですか？</button>
+      <button class="quick-q" onclick="sendQuickQ('花粉症の根本治療はできますか？')"><i class="ti ti-flower" style="font-size:14px;color:var(--teal-600)" aria-hidden="true"></i>花粉症の根本治療はできますか？</button>
+      <button class="quick-q" onclick="sendQuickQ('SIBOとはどんな病気ですか？')"><i class="ti ti-salad" style="font-size:14px;color:var(--teal-600)" aria-hidden="true"></i>SIBOとはどんな病気ですか？</button>
+    </div>
+    <div class="chat-messages" id="chat-messages">
+      <div class="msg ai">
+        <div class="ai-avatar"><i class="ti ti-robot" style="font-size:13px;color:var(--teal-600)" aria-hidden="true"></i></div>
+        <div class="msg-bubble">こんにちは。朴澤耳鼻咽喉科のAI健康コンシェルジュです。耳・鼻・喉・ホメオパシー・統合医療・腸活など、お気軽にご質問ください。</div>
+        <div class="msg-time">今</div>
+      </div>
+    </div>
+    <div class="chat-input-area">
+      <textarea id="chat-input" placeholder="ご質問を入力…" rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+      <button class="send-btn" id="send-btn" onclick="sendChat()" aria-label="送信"><i class="ti ti-send" style="font-size:16px" aria-hidden="true"></i></button>
+    </div>
+    <div class="disclaimer">
+      <i class="ti ti-info-circle" style="font-size:16px;color:var(--gray-400);flex-shrink:0;margin-top:1px" aria-hidden="true"></i>
+      <span>AIの回答は医療診断ではありません。症状・治療については必ず医師にご相談ください。</span>
+    </div>
+  </div>
+</div>
+<script>
+const ARTICLES = `統合医療センターTree of Lifeオープン～☆|https://tree-of-life.jp/blog/2011/02/8078|統合医療・ホリスティック|統合医療
+『スギ花粉症を克服する新しい治療法』セミナー報告ｰ2|https://tree-of-life.jp/blog/2011/02/8080|花粉症・アレルギー|花粉症,スギ花粉
+Jeevananda Yoga Center　明日よりスタート|https://tree-of-life.jp/blog/2011/03/8087|統合医療・ホリスティック|ヨガ
+Yoga レッスンの感想をご紹介します。|https://tree-of-life.jp/blog/2011/04/8094|統合医療・ホリスティック|ヨガ
+8月1日　統合医療センターTree of Life　HPオープン～☆|https://tree-of-life.jp/blog/2011/08/8123|統合医療・ホリスティック|統合医療
+『呼吸を知ろう、感じよう』実践セミナー|https://tree-of-life.jp/blog/2011/08/8125|その他|呼吸法
+おすすめ！『地球人』No.16　特集ホメオパシーのこれから|https://tree-of-life.jp/blog/2011/10/8136|ホメオパシー|ホメオパシー
+Tree of Lifeの統合医療は進化中です☆|https://tree-of-life.jp/blog/2012/01/8144|統合医療・ホリスティック|統合医療
+青山自然医療研究所で統合医療を実践：川嶋先生を尋ねるの巻☆|https://tree-of-life.jp/blog/2012/02/8150|統合医療・ホリスティック|統合医療
+スギ花粉アレルギー体質改善の治療手順は次の通りです☆|https://tree-of-life.jp/blog/2012/03/8153|花粉症・アレルギー|花粉症,スギ花粉,アレルギー
+こんにちは☆ToL鍼灸セクションです|https://tree-of-life.jp/blog/2012/04/8159|統合医療・ホリスティック|鍼灸
+めまい・みみの不調|https://tree-of-life.jp/blog/2012/05/8165|耳鼻咽喉科|めまい
+音楽療法セミナー『満月瞑想会』終了しました☆|https://tree-of-life.jp/blog/2012/06/8169|マインドフルネス・瞑想|マインドフルネス
+TOL News:音声治療スタートしています☆声でお悩みの方へ|https://tree-of-life.jp/blog/2012/06/8172|耳鼻咽喉科|声のかすれ
+7月15日『統合医療を知ろう』河北新報に掲載されました。|https://tree-of-life.jp/blog/2012/07/8193|統合医療・ホリスティック|統合医療
+9月1日よりスタート　【セルフケアのためのホメオパシー　急性疾患ABC】|https://tree-of-life.jp/blog/2012/08/8208|ホメオパシー|ホメオパシー
+睡眠薬や抗不安薬をやめたいなと思っている方へ|https://tree-of-life.jp/blog/2012/09/8209|睡眠・疲労|睡眠
+3月16日スペシャルセルフケアセミナー：『セルフヘルプとしてのバッチフラワーレメディ』|https://tree-of-life.jp/blog/2013/02/8244|ホメオパシー|レメディ,バッチフラワー
+鍼灸治療の流れについて|https://tree-of-life.jp/blog/2013/08/8260|統合医療・ホリスティック|鍼灸
+夏至の日☆河北新報朝刊に『代替医療じわり浸透』掲載されました☆|https://tree-of-life.jp/blog/2013/06/8275|統合医療・ホリスティック|
+【TOL News】鍼灸　火曜日・土曜日の施術がお受けできるようになりました♪|https://tree-of-life.jp/blog/2013/06/8276|統合医療・ホリスティック|鍼灸
+摂食・嚥下リハビリテーション|https://tree-of-life.jp/blog/2013/08/8292|耳鼻咽喉科|嚥下・飲み込み
+スリランカ、アーユルベーダ体験記 ～その1|https://tree-of-life.jp/blog/2013/09/8296|統合医療・ホリスティック|アーユルヴェーダ
+10月19日 お灸の教室 がんばっているあなたへ　その1 眼・頚・肩の疲れ|https://tree-of-life.jp/blog/2013/09/8302|睡眠・疲労|疲労回復,お灸
+お口のアンチエイジング|https://tree-of-life.jp/blog/2013/10/8304|生活習慣・ヘルスケア|
+お灸教室の報告|https://tree-of-life.jp/blog/2013/11/8318|統合医療・ホリスティック|お灸
+12月14日　お灸の教室　ほっこり冬支度『冬の冷え＆風邪予防』|https://tree-of-life.jp/blog/2013/11/8325|統合医療・ホリスティック|お灸,冷え
+プロフェッショナルボイスユーザーのための音声講習会|https://tree-of-life.jp/blog/2013/12/8326|耳鼻咽喉科|声のかすれ
+2月1日TOLホメオパシーセルフケアシリーズLesson6【花粉症、喘息、アトピー性皮膚炎のホメオパシー】|https://tree-of-life.jp/blog/2014/01/8335|花粉症・アレルギー|花粉症,アトピー,ホメオパシー
+スギ花粉症の体質改善が始まりました|https://tree-of-life.jp/blog/2014/01/8340|花粉症・アレルギー|花粉症,スギ花粉
+3.16『呼吸を知ろう、感じよう　Part2』|https://tree-of-life.jp/blog/2014/02/8344|その他|呼吸法
+3月29日プロフェッショナルボイスユーザーのための音声セミナー|https://tree-of-life.jp/blog/2014/02/8348|耳鼻咽喉科|声のかすれ
+河北新報に『呼吸を知ろう、感じよう　Part2』の記事が掲載されました！|https://tree-of-life.jp/blog/2014/02/8351|その他|呼吸法
+TOL ホメオパシーセルフケアシリーズの感想いただきました☆|https://tree-of-life.jp/blog/2014/02/8353|ホメオパシー|ホメオパシー
+『呼吸を知ろう、感じよう　Part2』前売り券の販売について|https://tree-of-life.jp/blog/2014/03/8355|その他|呼吸法
+4月12日　5月17日　お灸の教室変わります☆|https://tree-of-life.jp/blog/2014/03/8357|統合医療・ホリスティック|お灸
+明日、「呼吸を知ろう、感じよう　Part2」を開催します！！|https://tree-of-life.jp/blog/2014/03/8358|その他|呼吸法
+センダイ自由大学主催：自宅で簡単にできるセルフケア『お灸＆呼吸講座』|https://tree-of-life.jp/blog/2014/03/8363|統合医療・ホリスティック|呼吸法,お灸
+4月22日(火）Katoメソッド『はじめての呼吸のレッスン』はじまります☆|https://tree-of-life.jp/blog/2014/03/8365|その他|呼吸法
+5月24日（土）３回コース：女性のための植物療法～自律神経系～|https://tree-of-life.jp/blog/2014/04/8366|自律神経・ストレス|自律神経
+呼吸法で自律神経のバランスを整えましょう|https://tree-of-life.jp/blog/2014/04/8367|自律神経・ストレス|自律神経,呼吸法
+嚥下（えんげ）講習会＆嚥下体操教室|https://tree-of-life.jp/blog/2014/04/8370|耳鼻咽喉科|嚥下・飲み込み
+5月27日（火）Katoメソッド〜こころとからだをひらく〜『呼吸のレッスン』|https://tree-of-life.jp/blog/2014/04/8373|その他|呼吸法
+【院長特別講演】5月31日（土）、6月1日（日）　ホリスティック医学シンポジウム2014 in仙台 『こころ・からだ・いのちの再生』 ～東北の復興とホリスティック医療の未来～|https://tree-of-life.jp/blog/2014/04/8374|統合医療・ホリスティック|
+「お灸の教室い・ろ・は」より　〜身体のシグナル　ツボ〜|https://tree-of-life.jp/blog/2014/05/8382|統合医療・ホリスティック|お灸
+6月17日（火）Katoメソッド〜こころとからだをひらく〜『呼吸のレッスン』|https://tree-of-life.jp/blog/2014/06/8384|その他|呼吸法
+ホリスティック医学シンポジウム2014 in 仙台を終えて|https://tree-of-life.jp/blog/2014/06/8385|統合医療・ホリスティック|
+7月10日（木）認知症ケア☆アロマセラピーの活用と正しい精油の選び方|https://tree-of-life.jp/blog/2014/06/8387|統合医療・ホリスティック|
+7月12日　お灸の教室「冷房に負けない冷え対策」|https://tree-of-life.jp/blog/2014/06/8390|統合医療・ホリスティック|お灸,冷え
+7月　Katoメソッド〜こころとからだをひらく〜『呼吸のレッスン』schedule☆|https://tree-of-life.jp/blog/2014/06/8392|その他|呼吸法
+お灸の教室について|https://tree-of-life.jp/blog/2014/06/8395|統合医療・ホリスティック|お灸
+TOL News:7月5日（土）Yoga Lesson　追加で行います！|https://tree-of-life.jp/blog/2014/06/8396|統合医療・ホリスティック|ヨガ
+「仙台ボイスセンター」活動開始します！|https://tree-of-life.jp/blog/2014/06/8397|耳鼻咽喉科|
+HOLISTIC News Letter掲載　〜患者様の声〜『がんサイバーとしての代替医療』|https://tree-of-life.jp/blog/2014/06/8399|耳鼻咽喉科|声のかすれ
+お灸の教室について　２|https://tree-of-life.jp/blog/2014/06/8401|統合医療・ホリスティック|お灸
+8.21　TOL 夏休みスペシャルセルフケア 『親子deセルフケア～バッチフラワー&呼吸のレッスン編～』|https://tree-of-life.jp/blog/2014/07/8405|ホメオパシー|バッチフラワー,呼吸法
+８月　Katoメソッド〜こころとからだをひらく〜『呼吸のレッスン』schedule☆|https://tree-of-life.jp/blog/2014/07/8412|その他|呼吸法
+呼吸の勉強会 in 田沢湖|https://tree-of-life.jp/blog/2014/07/8414|その他|呼吸法
+9月13日　お灸の教室「夏バテ解消」|https://tree-of-life.jp/blog/2014/08/8417|統合医療・ホリスティック|お灸
+仙台ボイスセンター便り|https://tree-of-life.jp/blog/2014/08/8419|耳鼻咽喉科|
+9月　Katoメソッド〜こころとからだをひらく〜『呼吸のレッスン』schedule☆|https://tree-of-life.jp/blog/2014/08/8423|その他|呼吸法
+TOLのお灸教室がせんねん灸の「温故知新」に掲載されました☆|https://tree-of-life.jp/blog/2014/09/8429|統合医療・ホリスティック|お灸
+朴澤耳鼻咽喉科 Ricruit【求人情報】|https://tree-of-life.jp/blog/2014/09/8430|耳鼻咽喉科|のどの違和感
+11/22（土）はじめての漢方Lesson2～漢方浴で冷え知らず～|https://tree-of-life.jp/blog/2014/09/8434|生活習慣・ヘルスケア|冷え
+10月　Katoメソッド〜こころとからだをひらく〜『呼吸のレッスン』schedule☆|https://tree-of-life.jp/blog/2014/09/8435|その他|呼吸法
+Tree of Life　自律神経のバランスを整えるレッスンのリーフレットが完成いたしました！|https://tree-of-life.jp/blog/2014/09/8440|自律神経・ストレス|自律神経
+11月8日　「冷えをとって風邪予防」お灸の教室い・ろ・は|https://tree-of-life.jp/blog/2014/10/8441|統合医療・ホリスティック|お灸,冷え
+11／17（月）　Katoメソッド〜こころとからだをひらく〜『呼吸のレッスン』|https://tree-of-life.jp/blog/2014/10/8444|その他|呼吸法
+11／29（土）こころとからだのデトックス☆メディカルビューティファスティング&ヨガレッスン|https://tree-of-life.jp/blog/2014/10/8446|統合医療・ホリスティック|ヨガ
+12月☆Katoメソッド〜こころとからだをひらく〜『呼吸のレッスン』|https://tree-of-life.jp/blog/2014/11/8455|その他|呼吸法
+X&#8217;masスペシャルセミナー☆受験生のためのバッチフラワー&呼吸のレッスン|https://tree-of-life.jp/blog/2014/11/8457|ホメオパシー|バッチフラワー,呼吸法
+11月27日Datefm【J-SIDE STATION】14:35〜ON AIR 呼吸のお話|https://tree-of-life.jp/blog/2014/11/8463|その他|呼吸法
+☆新年☆Katoメソッド〜こころとからだをひらく〜『呼吸のレッスン』|https://tree-of-life.jp/blog/2014/12/8466|その他|呼吸法
+2015年2月〜4月開催☆花粉症ケアセミナー|https://tree-of-life.jp/blog/2015/01/8470|花粉症・アレルギー|花粉症
+1/22（木）〜花の力で輝く『自分らしさ』〜はじめてのバッチフラワーレメディ|https://tree-of-life.jp/blog/2014/12/8473|ホメオパシー|レメディ,バッチフラワー
+3/28（土）はじめての漢方Lesson3『漢方ケアで花粉症対策！』|https://tree-of-life.jp/blog/2015/01/8474|花粉症・アレルギー|花粉症
+4/4（土）花粉症のケアに役立つアロマテラピー|https://tree-of-life.jp/blog/2015/01/8479|花粉症・アレルギー|花粉症
+2/15 薬日本堂漢方スクール仙台校主催：お灸のい・ろ・は　冷えにくい身体作り～しょうが灸体験～|https://tree-of-life.jp/blog/2015/01/8480|統合医療・ホリスティック|お灸,冷え
+【2015年2月】Tree of Life　自律神経のバランスを整えるレッスン|https://tree-of-life.jp/blog/2015/01/8483|自律神経・ストレス|自律神経
+2/12（木）〜花の力で輝く『自分らしさ』〜 はじめてのバッチフラワーレメディ|https://tree-of-life.jp/blog/2015/01/8486|ホメオパシー|レメディ,バッチフラワー
+2/16（月）自律神経を知ろう＋呼吸のレッスン|https://tree-of-life.jp/blog/2015/01/8487|自律神経・ストレス|自律神経,呼吸法
+7月12日　お灸の教室せんねん灸の取材を受けるの巻☆|https://tree-of-life.jp/blog/2014/07/8977|統合医療・ホリスティック|お灸
+【2015年3月】Tree of Life　自律神経のバランスを整えるレッスン|https://tree-of-life.jp/blog/2015/02/9168|自律神経・ストレス|自律神経
+4/5（日）薬日本堂漢方スクール品川校主催：人に寄り添う医療 ～統合医療で健康を取り戻しましょう～『朴澤孝治先生　特別講演会』|https://tree-of-life.jp/blog/2015/02/9191|統合医療・ホリスティック|統合医療
+3/7（土）自律神経を知ろう＋呼吸のレッスン|https://tree-of-life.jp/blog/2015/02/9234|自律神経・ストレス|自律神経,呼吸法
+2月19日　呼吸のレッスン＆セルフリンパドレナージLesson1を終えて|https://tree-of-life.jp/blog/2015/02/9266|その他|呼吸法
+【2015年4月】Tree of Life　自律神経のバランスを整えるレッスン|https://tree-of-life.jp/blog/2015/03/9437|自律神経・ストレス|自律神経
+三陰交のお灸|https://tree-of-life.jp/blog/2015/04/9499|統合医療・ホリスティック|お灸
+４月２日（木）より、いよいよスタート！メディカルアロマテラピーのトリートメントを始めます！|https://tree-of-life.jp/blog/2015/03/9545|統合医療・ホリスティック|
+【2015年5月】Tree of Life　自律神経のバランスを整えるレッスン|https://tree-of-life.jp/blog/2015/04/9611|自律神経・ストレス|自律神経
+World Voice Day （国際声の日）2015|https://tree-of-life.jp/blog/2015/04/9805|耳鼻咽喉科|声のかすれ
+4月25日（土）『通年性アレルギーの予防と体質改善の方法』セミナーのおしらせ|https://tree-of-life.jp/blog/2015/04/9831|花粉症・アレルギー|アレルギー
+五月病対策　Good-Bye May Blues！ 〜自律神経のおはなし編|https://tree-of-life.jp/blog/2015/04/9855|自律神経・ストレス|自律神経
+五月病対策　Good-Bye May Blues!　〜呼吸編〜|https://tree-of-life.jp/blog/2015/04/9871|自律神経・ストレス|呼吸法
+声帯結節と音声治療|https://tree-of-life.jp/blog/2015/04/9902|耳鼻咽喉科|声のかすれ
+五月病対策　Good-Bye May Blues！ ～アロマ編〜「アロマテラピーによるセルフトリートメント」|https://tree-of-life.jp/blog/2015/04/9964|自律神経・ストレス|
+本格的なアロマテラピーのセルフケアを始めたい方に朗報！メディカルグレードの精油の販売をはじめます！|https://tree-of-life.jp/blog/2015/04/9979|統合医療・ホリスティック|
+杜の都・仙台から木のiyashi（癒し）のパワーを届けたい！ ～木曜日はiyashi（癒し）ナイト！～ 5・21（木） 自分の自律神経ってどうなっているかご存知ですか？ まずは「自律神経を知り・学び・改善しよう」講座＋森呼吸ナイト|https://tree-of-life.jp/blog/2015/04/10029|自律神経・ストレス|自律神経,呼吸法
+【2015年6月】Tree of Life　自律神経のバランスを整えるレッスン|https://tree-of-life.jp/blog/2015/05/10094|自律神経・ストレス|自律神経
+カラダを感じるレッスン。 アロマテラピーで楽しむ　「セルフトリートメント」講座を連続開催します！|https://tree-of-life.jp/blog/2015/05/10153|統合医療・ホリスティック|
+6月20日（土）サプリメントを取り入れて健康な毎日を過ごしましょう|https://tree-of-life.jp/blog/2015/05/10181|サプリメント・栄養|サプリメント
+アロマテラピー「ハンドトリートメント」講座レポート。6/18(木）第２回目の参加者募集中です！|https://tree-of-life.jp/blog/2015/06/10305|統合医療・ホリスティック|
+サプリメント・・ご存じですか？|https://tree-of-life.jp/blog/2015/06/10334|サプリメント・栄養|サプリメント
+【2015年7月】Tree of Life　自律神経のバランスを整えるレッスン|https://tree-of-life.jp/blog/2015/06/10353|自律神経・ストレス|自律神経
+6月、7月お灸教室のごあんない|https://tree-of-life.jp/blog/2015/06/10390|統合医療・ホリスティック|お灸
+【７月29日】呼吸のレッスン＆セルフリンパドレナージlesson１|https://tree-of-life.jp/blog/2015/06/10451|その他|呼吸法
+【2015年8月】Tree of Life　自律神経のバランスを整えるレッスン|https://tree-of-life.jp/blog/2015/07/10594|自律神経・ストレス|自律神経
+７月３０日（木）アロマのクールな香りでお肌もサラサラ⭐️虫よけボディパウダーづくり！|https://tree-of-life.jp/blog/2015/07/10613|統合医療・ホリスティック|
+お灸の教室 後半戦へ･･･！|https://tree-of-life.jp/blog/2015/07/10699|統合医療・ホリスティック|お灸
+ドクターズサプリメントをお取り扱いしております！|https://tree-of-life.jp/blog/2015/07/10725|サプリメント・栄養|サプリメント
+アロマテラピー「フットトリートメント講座」。8/20(木)ナイトセミナーにて追加開催決定！|https://tree-of-life.jp/blog/2015/07/10789|統合医療・ホリスティック|
+9月30日「婦人科系がんの治療された方とそのご家族の方のためのセルフケア講座」第三回目 “リハビリヨガ体験＆セルフリンパドレナージlesson3”|https://tree-of-life.jp/blog/2015/08/10841|統合医療・ホリスティック|ヨガ
+統合医療の立場から考えるアトピー性皮膚炎の治療|https://tree-of-life.jp/blog/2015/08/10856|花粉症・アレルギー|アトピー,統合医療
+9／2（水）Katoメソッド〜こころとからだをひらく〜『呼吸のレッスン』|https://tree-of-life.jp/blog/2015/08/10874|その他|呼吸法
+9／30（水）Jeevananda Yoga|https://tree-of-life.jp/blog/2015/08/10937|統合医療・ホリスティック|ヨガ
+サプリメントという選択も・・|https://tree-of-life.jp/blog/2015/09/11000|サプリメント・栄養|サプリメント
+ホリスティック医学協会主催：11月15日（東京）ホリスティック医学シンポジウム2015「平成医療維新～セルフケアの時代へ　「ホリスティックヘルス塾」開塾！|https://tree-of-life.jp/blog/2015/09/11059|統合医療・ホリスティック|
+10/7（水）、10/22（木）自律神経のバランスを整える『呼吸のレッスン』|https://tree-of-life.jp/blog/2015/09/11117|自律神経・ストレス|自律神経,呼吸法
+10/14（水）自律神経のバランスを整える『チベット体操』|https://tree-of-life.jp/blog/2015/09/11168|自律神経・ストレス|自律神経
+10／21（水）Jeevananda Yoga|https://tree-of-life.jp/blog/2015/09/11237|統合医療・ホリスティック|ヨガ
+【モンサンミッシェルの精油のすごいところを教えて！vol.５】フランスの医療現場におけるアロマテラピー|https://tree-of-life.jp/blog/2015/09/11368|統合医療・ホリスティック|
+10月5日（月）タピ大で講演します！『自律神経のバランスを呼吸法・ミニチベット体操で整えましょう』|https://tree-of-life.jp/blog/2015/09/11391|自律神経・ストレス|自律神経,呼吸法
+10/29（木）今日からできる「美しい声の保ちかた」in ナイトセミナー|https://tree-of-life.jp/blog/2015/09/11402|耳鼻咽喉科|声のかすれ
+火を使わないお灸　太陽|https://tree-of-life.jp/blog/2015/10/11457|統合医療・ホリスティック|お灸
+『お灸で肩こり解消』薬日本堂でのお灸の教室い・ろ・は|https://tree-of-life.jp/blog/2015/10/11469|統合医療・ホリスティック|お灸
+10月31日お灸の教室　い・ろ・は「女性の曲がり角〜更年期〜」|https://tree-of-life.jp/blog/2015/10/11484|統合医療・ホリスティック|お灸
+11/4（水）、11/25（水）自律神経のバランスを整える『呼吸のレッスン』※30分のプライベートレッスンもご予約を承っております！|https://tree-of-life.jp/blog/2015/10/11521|自律神経・ストレス|自律神経,呼吸法
+11/11（水）自律神経のバランスを整える『チベット体操』|https://tree-of-life.jp/blog/2015/10/11551|自律神経・ストレス|自律神経
+11/12（木）、11/18（水）Jeevananda Yoga　　※アロマヨガも開催します！|https://tree-of-life.jp/blog/2015/10/11567|統合医療・ホリスティック|ヨガ
+11/19（木）『今日からできる美しい声の保ちかた』その２　in ナイトセミナー|https://tree-of-life.jp/blog/2015/10/11591|耳鼻咽喉科|声のかすれ
+11/14（土）お灸の教室い・ろ・は　〜火のパワーで風邪予防〜|https://tree-of-life.jp/blog/2015/10/11652|統合医療・ホリスティック|お灸
+12/2（水）自律神経のバランスを整える『呼吸のレッスン』|https://tree-of-life.jp/blog/2015/11/11667|自律神経・ストレス|自律神経,呼吸法
+12/3（木）自律神経のバランスを整える『チベット体操』|https://tree-of-life.jp/blog/2015/11/11711|自律神経・ストレス|自律神経
+12/16（水）自律神経のバランスを整える『Jeevananda Yoga』|https://tree-of-life.jp/blog/2015/11/11755|自律神経・ストレス|自律神経,ヨガ
+11月26日(木)『女性のための栄養とサプリメント』セミナー開催します|https://tree-of-life.jp/blog/2015/11/11763|サプリメント・栄養|サプリメント,食事・栄養
+『自律神経のバランスを整えるレッスン』のFacebookページがOPENしました！|https://tree-of-life.jp/blog/2015/11/11811|自律神経・ストレス|自律神経
+1/6（水）、1/27（水）自律神経のバランスを整える『呼吸のレッスン』※45分のプライベートレッスンもご予約を承っております！|https://tree-of-life.jp/blog/2015/12/11926|自律神経・ストレス|自律神経,呼吸法
+1/13（水）自律神経のバランスを整える『チベット体操』|https://tree-of-life.jp/blog/2015/12/11977|自律神経・ストレス|自律神経
+1/20（水）自律神経のバランスを整える『Jeevananda Yoga』|https://tree-of-life.jp/blog/2015/12/11993|自律神経・ストレス|自律神経,ヨガ
+１月28日（木）センダイ自由大学主催「メディカル・アロマセラピー」講座 〜心と身体を癒す香りのちから〜|https://tree-of-life.jp/blog/2015/12/12012|統合医療・ホリスティック|
+2/15（月）自律神経のバランスを整える『Katoメソッド 呼吸のレッスン』|https://tree-of-life.jp/blog/2016/01/12122|自律神経・ストレス|自律神経,呼吸法
+2/19（金）自律神経のバランスを整える『チベット体操』|https://tree-of-life.jp/blog/2016/01/12143|自律神経・ストレス|自律神経
+2/22（月）自律神経のバランスを整える『Jeevananda Yoga』|https://tree-of-life.jp/blog/2016/01/12170|自律神経・ストレス|自律神経,ヨガ
+2月13日(土)『サプリメントで免疫力アップ！』セミナー開催します！！|https://tree-of-life.jp/blog/2016/01/12183|サプリメント・栄養|サプリメント,免疫
+3/16（水）自律神経のバランスを整える『Katoメソッド 呼吸のレッスン』|https://tree-of-life.jp/blog/2016/02/12420|自律神経・ストレス|自律神経,呼吸法
+3/26（土）自律神経のバランスを整える『チベット体操』|https://tree-of-life.jp/blog/2016/02/12432|自律神経・ストレス|自律神経
+3/28（月）自律神経のバランスを整える『Jeevananda Yoga』|https://tree-of-life.jp/blog/2016/02/12438|自律神経・ストレス|自律神経,ヨガ
+花粉症とアロマテラピー。 精油の効果で、つらい症状をおさえましょう！|https://tree-of-life.jp/blog/2016/02/12524|花粉症・アレルギー|花粉症
+花粉症や風邪、ノドの不快な症状には 精油の「うがい」がおすすめです！|https://tree-of-life.jp/blog/2016/02/12526|花粉症・アレルギー|花粉症
+3/12（土）『お灸の教室い・ろ・は　お灸で調える　花粉症』|https://tree-of-life.jp/blog/2016/02/12577|花粉症・アレルギー|花粉症,お灸
+耳・鼻・目など頭部の不快症状に、ボッダー式リンパドレナージ！|https://tree-of-life.jp/blog/2016/03/12604|耳鼻咽喉科|
+あの日から5年　〜鍼灸セクションより〜|https://tree-of-life.jp/blog/2016/03/12631|統合医療・ホリスティック|鍼灸
+4/25（月）自律神経のバランスを整える『チベット体操』|https://tree-of-life.jp/blog/2016/03/12640|自律神経・ストレス|自律神経
+4/18（月）自律神経のバランスを整える『Katoメソッド 呼吸のレッスン』|https://tree-of-life.jp/blog/2016/03/12645|自律神経・ストレス|自律神経,呼吸法
+4/23（土）自律神経のバランスを整える『Jeevananda Yoga』|https://tree-of-life.jp/blog/2016/03/12659|自律神経・ストレス|自律神経,ヨガ
+4月16日、23日（土）「声を使う方のための音声セミナー」|https://tree-of-life.jp/blog/2016/03/12720|耳鼻咽喉科|声のかすれ
+ホリスティック医学協会主催：2016年6月5日 がんを超える生き方 ～病いが教えてくれる新たないのち〜|https://tree-of-life.jp/blog/2016/03/12745|統合医療・ホリスティック|
+5/16　自律神経のバランスを整える『Katoメソッド 呼吸のレッスン』|https://tree-of-life.jp/blog/2016/04/12819|自律神経・ストレス|自律神経,呼吸法
+5/23（月）自律神経のバランスを整える『チベット体操』|https://tree-of-life.jp/blog/2016/04/12828|自律神経・ストレス|自律神経
+5/30（月）自律神経のバランスを整える『Jeevananda Yoga』|https://tree-of-life.jp/blog/2016/04/12839|自律神経・ストレス|自律神経,ヨガ
+「自律神経のバランスを知ろう！セミナー」＆「加藤メソッド〜呼吸のレッスン」|https://tree-of-life.jp/blog/2016/05/12935|自律神経・ストレス|自律神経,呼吸法
+6/20（水）自律神経のバランスを整える『Katoメソッド 呼吸のレッスン』|https://tree-of-life.jp/blog/2016/06/12952|自律神経・ストレス|自律神経,呼吸法
+6/27（月）自律神経のバランスを整える『Jeevananda Yoga』|https://tree-of-life.jp/blog/2016/06/13002|自律神経・ストレス|自律神経,ヨガ
+7月9日（土）『お灸の教室い・ろ・は〜お灸で調える　むくみ〜』|https://tree-of-life.jp/blog/2016/06/13048|統合医療・ホリスティック|お灸
+2016.6/25発売『アンチエイジング医療最前線』に掲載されました。|https://tree-of-life.jp/blog/2016/06/13062|生活習慣・ヘルスケア|
+7/23（土）自律神経のバランスを整える『Katoメソッド 呼吸のレッスン』|https://tree-of-life.jp/blog/2016/06/13078|自律神経・ストレス|自律神経,呼吸法
+7/25（月）自律神経のバランスを整える『Jeevananda Yoga』|https://tree-of-life.jp/blog/2016/06/13113|自律神経・ストレス|自律神経,ヨガ
+7/30（土）自律神経のバランスを整える『チベット体操』|https://tree-of-life.jp/blog/2016/06/13125|自律神経・ストレス|自律神経
+8/15（月）自律神経のバランスを整える『Katoメソッド 呼吸のレッスン』|https://tree-of-life.jp/blog/2016/07/13184|自律神経・ストレス|自律神経,呼吸法
+8/22（月）自律神経のバランスを整える『チベット体操』|https://tree-of-life.jp/blog/2016/07/13204|自律神経・ストレス|自律神経
+8/29（月）自律神経のバランスを整える『Jeevananda Yoga』|https://tree-of-life.jp/blog/2016/07/13214|自律神経・ストレス|自律神経,ヨガ
+8/27（土）アンチエイジングケアレッスン『チベット体操』自律神経測定付き!!|https://tree-of-life.jp/blog/2016/07/13232|自律神経・ストレス|自律神経
+9月〜アンチエイジング検診を行います。|https://tree-of-life.jp/blog/2016/08/13271|生活習慣・ヘルスケア|
+ブタクサ花粉症の体質改善|https://tree-of-life.jp/blog/2016/08/13299|花粉症・アレルギー|花粉症
+9/5（月）自律神経のバランスを整える【加藤メソッド〜呼吸のレッスン】|https://tree-of-life.jp/blog/2016/08/13337|自律神経・ストレス|自律神経,呼吸法
+9/24（土）自律神経のバランスを整える【チベット体操】|https://tree-of-life.jp/blog/2016/08/13351|自律神経・ストレス|自律神経
+9/26（月）自律神経のバランスを整える【 Jeevananda Yoga 】|https://tree-of-life.jp/blog/2016/08/13363|自律神経・ストレス|自律神経,ヨガ
+10/1（土）呼吸とお灸、やってみよう！|https://tree-of-life.jp/blog/2016/08/13381|統合医療・ホリスティック|呼吸法,お灸
+10/15(土)・22(土)【声を使う方のための音声セミナー】|https://tree-of-life.jp/blog/2016/09/13545|耳鼻咽喉科|声のかすれ
+10/17（月）自律神経のバランスを整える【呼吸のレッスン】|https://tree-of-life.jp/blog/2016/09/13552|自律神経・ストレス|自律神経,呼吸法
+10/24（月）自律神経のバランスを整える【Jeevanada Yoga】|https://tree-of-life.jp/blog/2016/09/13577|自律神経・ストレス|自律神経,ヨガ
+10/28（金）自律神経のバランスを整える【チベット体操】|https://tree-of-life.jp/blog/2016/10/13593|自律神経・ストレス|自律神経
+11/10（木）開催【自然療法セミナー】夜の部：有害ミネラルとデトックス|https://tree-of-life.jp/blog/2016/10/13613|サプリメント・栄養|
+高濃度ビタミンC点滴療法|https://tree-of-life.jp/blog/2016/10/13640|サプリメント・栄養|サプリメント
+10月10日　一般社団法人日本ホメオパシー医学会　特別セミナーにて「アレルギー疾患」に関して　院長　講演致します。|https://tree-of-life.jp/blog/2016/10/13686|花粉症・アレルギー|アレルギー,ホメオパシー
+11/12（土）お灸のい･ろ･は【便秘と美肌】|https://tree-of-life.jp/blog/2016/10/13713|統合医療・ホリスティック|お灸
+11/19（土）　家庭のくすり箱【はじめてのホメオパシー】|https://tree-of-life.jp/blog/2016/10/13738|ホメオパシー|ホメオパシー
+11月19日（土）家庭のくすり箱【はじめてのホメオパシー】|https://tree-of-life.jp/blog/2016/10/13766|ホメオパシー|ホメオパシー
+【アンチエイジング健診】〜毛髪ミネラル検査〜|https://tree-of-life.jp/blog/2016/11/13791|サプリメント・栄養|
+風邪・インフルエンザに役立つ栄養素|https://tree-of-life.jp/blog/2016/11/13805|サプリメント・栄養|食事・栄養
+高濃度ビタミンC点滴療法の流れ|https://tree-of-life.jp/blog/2016/11/13814|サプリメント・栄養|サプリメント
+『アンチエイジング健診』リーフレット出来ました〜！|https://tree-of-life.jp/blog/2016/11/13838|生活習慣・ヘルスケア|
+12/19（月）自律神経のバランスを整える【Katoメソッド〜呼吸のレッスン】|https://tree-of-life.jp/blog/2016/11/13909|自律神経・ストレス|自律神経,呼吸法
+12/9（金）【アンチエイジング★チベット体操】|https://tree-of-life.jp/blog/2016/11/13931|生活習慣・ヘルスケア|
+12/26（月）自律神経のバランスを整える【Jeevananda Yoga】|https://tree-of-life.jp/blog/2016/11/13937|自律神経・ストレス|自律神経,ヨガ
+【アンチエイジング健診】〜酸化ストレス検査〜|https://tree-of-life.jp/blog/2016/11/13942|自律神経・ストレス|ストレス
+＜1月＞自律神経改善プログラム【Jeevananda Yoga】|https://tree-of-life.jp/blog/2016/12/14011|自律神経・ストレス|自律神経,ヨガ
+今年のお灸の教室　終了です|https://tree-of-life.jp/blog/2016/12/14012|統合医療・ホリスティック|お灸
+＜1月＞自律神経改善プログラム【加藤メソッド 〜呼吸のレッスン】|https://tree-of-life.jp/blog/2016/12/14034|自律神経・ストレス|自律神経,呼吸法
+＜1月＞自律神経改善プログラム【チベット体操】|https://tree-of-life.jp/blog/2016/12/14039|自律神経・ストレス|自律神経
+第20回【日本統合医療学会】で院長が講演します!!|https://tree-of-life.jp/blog/2016/12/14052|統合医療・ホリスティック|統合医療
+【アンチエイジング健診】〜腸内環境検査〜|https://tree-of-life.jp/blog/2016/12/14070|腸活・SIBO・腸内環境|腸活
+＜２月＞自律神経改善プログラム【チベット体操】|https://tree-of-life.jp/blog/2017/01/14156|自律神経・ストレス|自律神経
+＜２月＞自律神経改善プログラム【加藤メソッド 〜呼吸法】|https://tree-of-life.jp/blog/2017/01/14166|自律神経・ストレス|自律神経,呼吸法
+＜２月＞自律神経改善プログラム【Jeevananda Yoga】|https://tree-of-life.jp/blog/2017/01/14170|自律神経・ストレス|自律神経,ヨガ
+スギ花粉症の体質改善とは？|https://tree-of-life.jp/blog/2021/01/14182|花粉症・アレルギー|花粉症,スギ花粉
+『高濃度ビタミンＣ点滴療法』リーフレットが出来ました！|https://tree-of-life.jp/blog/2017/02/14206|サプリメント・栄養|サプリメント
+ドクターズサプリメントって何？|https://tree-of-life.jp/blog/2017/02/14216|サプリメント・栄養|サプリメント
+ホリスティック医学ワークショップ2017 in仙台|https://tree-of-life.jp/blog/2017/02/14251|統合医療・ホリスティック|
+アレルギーの新しい治療にご協力いただける方を募集しています。|https://tree-of-life.jp/blog/2017/02/14270|花粉症・アレルギー|アレルギー
+花粉症と腸内細菌|https://tree-of-life.jp/blog/2017/02/14300|花粉症・アレルギー|花粉症,腸活
+花粉症に『お灸・ツボ』|https://tree-of-life.jp/blog/2017/03/14312|花粉症・アレルギー|花粉症,お灸
+続・ドクターズサプリメントって何？|https://tree-of-life.jp/blog/2017/04/14375|サプリメント・栄養|サプリメント
+良い声を出すためには？|https://tree-of-life.jp/blog/2017/04/14388|耳鼻咽喉科|声のかすれ
+今年のスギ花粉症の体質改善は終了しました。|https://tree-of-life.jp/blog/2017/04/14391|花粉症・アレルギー|花粉症,スギ花粉
+ホルモンバランスを整える食事と栄養|https://tree-of-life.jp/blog/2017/04/14434|サプリメント・栄養|食事・栄養
+【アンチエイジング健診】〜ホルモンバランス検査〜|https://tree-of-life.jp/blog/2017/04/14444|生活習慣・ヘルスケア|
+はじめまして、鍼灸師の小原です☆|https://tree-of-life.jp/blog/2017/04/14456|統合医療・ホリスティック|鍼灸
+5月病と自律神経失調症|https://tree-of-life.jp/blog/2017/04/14507|自律神経・ストレス|自律神経
+5月病と副腎疲労|https://tree-of-life.jp/blog/2017/04/14520|睡眠・疲労|疲労回復
+マインドフルネス呼吸法|https://tree-of-life.jp/blog/2017/04/14532|マインドフルネス・瞑想|マインドフルネス,呼吸法
+H29.3.1発行すこやかMESSAGE春号「アレルギーと腸の関係」院長の記事が掲載されています。|https://tree-of-life.jp/blog/2017/03/14598|花粉症・アレルギー|アレルギー
+ホリスティック医学講演会 2017 in 仙台|https://tree-of-life.jp/blog/2017/05/14607|統合医療・ホリスティック|
+朴澤耳鼻咽喉科、統合メディカルケアセンターTree of Lifeでは、共に働く看護師さん、受付フロント係を募集しています。|https://tree-of-life.jp/blog/2017/05/14654|耳鼻咽喉科|のどの違和感
+６月は【 カモガヤ花粉症 】に要注意！|https://tree-of-life.jp/blog/2017/05/14703|花粉症・アレルギー|花粉症
+遅延型食物アレルギー検査|https://tree-of-life.jp/blog/2017/06/14748|花粉症・アレルギー|アレルギー
+ハウスダスト・ダニ のアレルギー体質改善|https://tree-of-life.jp/blog/2017/06/14759|花粉症・アレルギー|アレルギー
+【仙台ボイスセンター】リーフレットがリニューアルしました♪|https://tree-of-life.jp/blog/2017/07/14777|耳鼻咽喉科|
+アンチエイジングで、自立した明るいセカンドライフを楽しみましょう|https://tree-of-life.jp/blog/2017/07/14838|生活習慣・ヘルスケア|
+夏の疲れ|https://tree-of-life.jp/blog/2017/07/14934|睡眠・疲労|疲労回復
+日焼け止めでビタミンD不足！？|https://tree-of-life.jp/blog/2017/07/14986|サプリメント・栄養|サプリメント
+鍼灸治療、音声治療を受けていらっしゃる方へ|https://tree-of-life.jp/blog/2017/08/15034|耳鼻咽喉科|声のかすれ,鍼灸
+アンチエイジング健診のリーフレットが新しくなりました！|https://tree-of-life.jp/blog/2017/08/15044|生活習慣・ヘルスケア|
+自律神経改善プログラムのリーフレットが新しくなりました！|https://tree-of-life.jp/blog/2017/08/15054|自律神経・ストレス|自律神経
+適度な水分補給で声の不調を予防しましょう|https://tree-of-life.jp/blog/2017/08/15082|耳鼻咽喉科|声のかすれ
+看護師がお答えします！〜高濃度ビタミンC点滴〜|https://tree-of-life.jp/blog/2017/09/15145|サプリメント・栄養|サプリメント
+【高濃度ビタミンＣ点滴の流れ】予約〜点滴まで|https://tree-of-life.jp/blog/2017/09/15151|サプリメント・栄養|サプリメント
+【めまい】何科を受診したらいいの？|https://tree-of-life.jp/blog/2017/10/15222|耳鼻咽喉科|めまい
+お灸 de 解決！【美味しい健康と、美肌】|https://tree-of-life.jp/blog/2017/10/15244|統合医療・ホリスティック|お灸
+速報！朴澤院長が、日本ホリスティック医学協会、副会長に就任しました。|https://tree-of-life.jp/blog/2017/10/15285|統合医療・ホリスティック|
+運動が加齢性難聴の予防に！？　by 太田／言語聴覚士|https://tree-of-life.jp/blog/2017/10/15336|耳鼻咽喉科|難聴
+チョコレートの甘くない効果！？　by 岩間／看護師・NRサプリメントアドバイザー|https://tree-of-life.jp/blog/2017/10/15342|サプリメント・栄養|サプリメント
+冷え対策！おすすめ商品|https://tree-of-life.jp/blog/2017/11/15370|生活習慣・ヘルスケア|冷え
+お灸 de 解決！〜冷え性にオススメのツボ〜|https://tree-of-life.jp/blog/2017/12/15418|統合医療・ホリスティック|お灸,冷え
+ほんとにすごい！ビタミンＣの効果|https://tree-of-life.jp/blog/2017/12/15436|サプリメント・栄養|サプリメント
+朴澤院長に聞いてみよう!!【スギ花粉症Q&A】|https://tree-of-life.jp/blog/2018/01/15460|花粉症・アレルギー|花粉症,スギ花粉
+【食べる花粉症対策】by NRサプリメントアドバイザー Iwama|https://tree-of-life.jp/blog/2018/01/15466|花粉症・アレルギー|花粉症,サプリメント
+おすすめ Dr&#8217;s サプリメント【レスベラトロール】|https://tree-of-life.jp/blog/2018/01/15483|サプリメント・栄養|サプリメント
+手軽に鼻洗い☆ついに登場です！|https://tree-of-life.jp/blog/2018/02/15545|耳鼻咽喉科|
+＜NEW!!＞美容鍼灸　〜TOL鍼灸セクション〜|https://tree-of-life.jp/blog/2018/02/15557|統合医療・ホリスティック|鍼灸
+嚥下障害という病気、ご存じですか？|https://tree-of-life.jp/blog/2018/02/15579|耳鼻咽喉科|嚥下・飲み込み
+続・朴澤院長に聞いてみよう!!【スギ花粉症Q&A】|https://tree-of-life.jp/blog/2019/02/15594|花粉症・アレルギー|花粉症,スギ花粉
+＜4月14日(土)開催＞ホリスティック医学協会 仙台セミナー【更年期から若返る、女性ホルモンの秘密】|https://tree-of-life.jp/blog/2018/02/15638|統合医療・ホリスティック|
+ホリスティック医学協会副会長就任のごあいさつ|https://tree-of-life.jp/blog/2018/03/15653|統合医療・ホリスティック|
+【花粉症対策】肌のピンチを助ける『栄養』|https://tree-of-life.jp/blog/2018/03/15661|花粉症・アレルギー|花粉症,食事・栄養
+＜花粉症対策＞　症状解消の『ツボ』|https://tree-of-life.jp/blog/2018/03/15676|花粉症・アレルギー|花粉症
+《春の栄養学》冬から春へ体リセット|https://tree-of-life.jp/blog/2018/03/15708|サプリメント・栄養|食事・栄養
+眼精疲労でお悩みの方に・・・|https://tree-of-life.jp/blog/2018/04/15771|睡眠・疲労|疲労回復
+春は鍼灸で心身を整えリラックスして過ごしましょう|https://tree-of-life.jp/blog/2018/04/15794|自律神経・ストレス|鍼灸
+《 教えて！朴澤院長 》5月病と自律神経失調症、副腎疲労|https://tree-of-life.jp/blog/2018/04/15827|自律神経・ストレス|自律神経,疲労回復
+その疲れ、今すぐリセット！ストレス疲労回復の栄養素|https://tree-of-life.jp/blog/2018/04/15829|自律神経・ストレス|ストレス,疲労回復,食事・栄養
+《 教えて！朴澤院長 》慢性的なそのお悩み、隠れたアレルギーが原因かもしれません。|https://tree-of-life.jp/blog/2018/06/15850|花粉症・アレルギー|アレルギー
+口内炎、予防改善の栄養素|https://tree-of-life.jp/blog/2018/06/15861|サプリメント・栄養|食事・栄養
+8月4日(土)【いのち見つめるとき】ホリスティック医学シンポジウム 2018|https://tree-of-life.jp/blog/2018/06/15892|統合医療・ホリスティック|
+《 教えて！朴澤院長 》夏の耳のトラブルに、要注意!|https://tree-of-life.jp/blog/2018/08/15929|耳鼻咽喉科|
+《 教えて！朴澤院長 》９月は自律神経のバランスを取って気象病に気をつけましょう|https://tree-of-life.jp/blog/2018/08/15996|自律神経・ストレス|自律神経
+《お灸 de 解決！》胃腸の不調に効くツボ|https://tree-of-life.jp/blog/2018/08/16008|腸活・SIBO・腸内環境|お灸
+これでいいのか？日本の医療 　　第3話　健康を回復する医療と、症状を緩和する医療|https://tree-of-life.jp/blog/2018/09/16025|睡眠・疲労|疲労回復
+12/8(土)開催【 冷えとポカポカ安眠 お灸教室 】|https://tree-of-life.jp/blog/2018/10/16147|統合医療・ホリスティック|お灸,冷え
+NEW!!《 副腎疲労症候群 》のリーフレットが出来上がりました☆|https://tree-of-life.jp/blog/2018/10/16187|睡眠・疲労|疲労回復
+《 教えて！朴澤院長 》たかが耳鳴り、されど耳鳴り|https://tree-of-life.jp/blog/2018/11/16219|耳鼻咽喉科|耳鳴り
+風邪とインフルエンザ予防の栄養素|https://tree-of-life.jp/blog/2018/11/16225|サプリメント・栄養|食事・栄養
+自律神経を調える呼吸法|https://tree-of-life.jp/blog/2018/11/16229|自律神経・ストレス|自律神経,呼吸法
+鍼灸で身体のケアをするように、お顔のケアもしましょう.|https://tree-of-life.jp/blog/2018/11/16257|統合医療・ホリスティック|鍼灸
+これでいいのか日本の医療？ 　第12話　現代社会で質のよい睡眠をとるために必要なこと|https://tree-of-life.jp/blog/2018/11/16260|睡眠・疲労|睡眠
+これでいいのか日本の医療？ 　第13話　危険な現代病、睡眠時無呼吸症候群|https://tree-of-life.jp/blog/2018/11/16279|睡眠・疲労|呼吸法,睡眠
+《 お灸 de 解決 》冷えと、ポカポカ安眠のツボ|https://tree-of-life.jp/blog/2018/11/16307|統合医療・ホリスティック|お灸,冷え
+これでいいのか日本の医療？ 　第15話　飽食の時代の食事を考える|https://tree-of-life.jp/blog/2018/12/16318|生活習慣・ヘルスケア|食事・栄養
+第２回《 院内サプリメント発表会 》終了しました☆|https://tree-of-life.jp/blog/2018/12/16326|サプリメント・栄養|サプリメント
+これでいいのか日本の医療？ 　第18話　腸内の善玉菌を育てて、快便の習慣を保ちましょう|https://tree-of-life.jp/blog/2018/12/16361|腸活・SIBO・腸内環境|腸活
+大人女子のためのセルフケアセミナー《 呼吸美人とお灸美人 》|https://tree-of-life.jp/blog/2018/12/16364|統合医療・ホリスティック|呼吸法,お灸
+《 教えて！朴澤院長 》睡眠時無呼吸症候群といびき症について|https://tree-of-life.jp/blog/2018/12/16375|睡眠・疲労|呼吸法,睡眠
+正月太り解消をサポートする栄養素|https://tree-of-life.jp/blog/2018/12/16385|サプリメント・栄養|食事・栄養
+Beauty × 鍼灸【 美 容 鍼 灸 】|https://tree-of-life.jp/blog/2019/02/16429|統合医療・ホリスティック|鍼灸
+これでいいのか日本の医療？ 　　第19話　スギ花粉症と腸内細菌。アレルギーは治る病気です！|https://tree-of-life.jp/blog/2019/01/16437|花粉症・アレルギー|花粉症,スギ花粉,アレルギー,腸活
+2019年 スギ花粉飛散予想|https://tree-of-life.jp/blog/2019/01/16445|花粉症・アレルギー|花粉症,スギ花粉
+《 教えて！朴澤院長 》スギ花粉症 Ｑ＆Ａ|https://tree-of-life.jp/blog/2019/01/16450|花粉症・アレルギー|花粉症,スギ花粉
+花粉症とヨーグルト|https://tree-of-life.jp/blog/2019/01/16456|花粉症・アレルギー|花粉症
+鼻洗いはなぜいいの？？|https://tree-of-life.jp/blog/2019/02/16472|耳鼻咽喉科|
+これでいいのか、日本の医療？ 　　第20話　もう一つのアレルギー、3型アレルギー。知らず知らずに体調をこわす物を食べていませんか？|https://tree-of-life.jp/blog/2019/02/16488|花粉症・アレルギー|アレルギー
+加藤俊郎先生『美容鍼灸』初体験!!|https://tree-of-life.jp/blog/2019/03/16577|統合医療・ホリスティック|鍼灸
+これでいいのか日本の医療？ 　　第22話　自律神経失調症は、うつ病ではありません。呼吸法で、自律神経を整えましょう。|https://tree-of-life.jp/blog/2019/03/16610|自律神経・ストレス|自律神経,呼吸法
+これでいいのか日本の医療？　第24話　副腎疲労症候群をご存知ですか？|https://tree-of-life.jp/blog/2019/03/16645|睡眠・疲労|疲労回復
+ストレスケアで、五月病予防しましょう|https://tree-of-life.jp/blog/2019/03/16669|自律神経・ストレス|ストレス
+これでいいのか日本の医療？　第25話　老化は病気です!|https://tree-of-life.jp/blog/2019/03/16693|生活習慣・ヘルスケア|
+はじめまして、鍼灸師の佐藤光恵です。|https://tree-of-life.jp/blog/2019/04/16701|統合医療・ホリスティック|鍼灸
+これでいいのか日本の医療？   第26話　アンチエイジング医療とは|https://tree-of-life.jp/blog/2019/04/16719|生活習慣・ヘルスケア|
+これでいいのか日本の医療？ 第27話　健康に影響するスピリチュアルな因子とは？　中庸の徳とホメオパシー|https://tree-of-life.jp/blog/2019/04/16735|ホメオパシー|ホメオパシー
+《 教えて！朴澤院長 》五月病のお話|https://tree-of-life.jp/blog/2019/04/16760|自律神経・ストレス|
+疲労回復の栄養素|https://tree-of-life.jp/blog/2019/05/16769|サプリメント・栄養|疲労回復,食事・栄養
+7/27(土) お灸教室《 肩こりと疲れ目 》開催|https://tree-of-life.jp/blog/2019/05/16804|睡眠・疲労|疲労回復,お灸
+お灸 de セルフケア♪《 歯ぐきの腫れ 》|https://tree-of-life.jp/blog/2019/05/16814|統合医療・ホリスティック|お灸
+アレルギー体質改善カレンダー|https://tree-of-life.jp/blog/2019/06/16828|花粉症・アレルギー|アレルギー
+『梅雨冷え』の原因と対策|https://tree-of-life.jp/blog/2019/06/16834|生活習慣・ヘルスケア|冷え
+仙台ボイスセンターでの治療をご希望の方へ|https://tree-of-life.jp/blog/2019/06/16853|耳鼻咽喉科|
+《 おしえて、朴澤院長！ 》耳が詰まったとき、どうしたらいいでしょう？|https://tree-of-life.jp/blog/2019/07/16920|耳鼻咽喉科|
+夏を元気に乗り切る栄養素|https://tree-of-life.jp/blog/2019/07/16926|サプリメント・栄養|食事・栄養
+お灸 de セルフケア♪《 胃の疲れ 》|https://tree-of-life.jp/blog/2019/07/16939|睡眠・疲労|疲労回復,お灸
+《 教えて！朴澤院長 》統合医療ってなに？？|https://tree-of-life.jp/blog/2019/08/16961|統合医療・ホリスティック|統合医療
+お灸 de セルフケア♪《 足のむくみ 》|https://tree-of-life.jp/blog/2019/08/16985|統合医療・ホリスティック|お灸
+受付新人･富樫が院長にインタビュー！【 題 材 】自己治癒力を引き出す治療 「鍼灸」とはなんですか？|https://tree-of-life.jp/blog/2019/08/17023|統合医療・ホリスティック|鍼灸
+鍼灸は「痛くて熱い」は本当！？|https://tree-of-life.jp/blog/2019/08/17042|統合医療・ホリスティック|鍼灸
+お灸 de セルフケア♪《 秋口の風邪 》|https://tree-of-life.jp/blog/2019/09/17063|統合医療・ホリスティック|お灸
+自律神経改善プログラムリーフレット★リニューアル!!|https://tree-of-life.jp/blog/2019/09/17076|自律神経・ストレス|自律神経
+当院では言語聴覚士による音声治療が可能です。|https://tree-of-life.jp/blog/2019/10/17109|耳鼻咽喉科|声のかすれ
+お灸 de セルフケア♪《 膝の痛み 》|https://tree-of-life.jp/blog/2019/10/17146|統合医療・ホリスティック|お灸
+第３回《 院内サプリメント発表会 》、今年も終了しました〜!!☆|https://tree-of-life.jp/blog/2019/10/17175|サプリメント・栄養|サプリメント
+11/30(土) 開催＿第７回 日本統合医療学会山形県支部大会＿一般の方への統合医療《 セルフメディケーション時代の統合医療のあり方 》|https://tree-of-life.jp/blog/2019/11/17214|統合医療・ホリスティック|統合医療
+お灸 de セルフケア《 生理前のイライラや生理痛に 》|https://tree-of-life.jp/blog/2019/11/17217|統合医療・ホリスティック|お灸
+お灸 de セルフケア《 胃腸の疲れ 》|https://tree-of-life.jp/blog/2019/11/17301|腸活・SIBO・腸内環境|疲労回復,お灸
+のどの乾燥対策＿By Ota|https://tree-of-life.jp/blog/2019/12/17318|耳鼻咽喉科|のどの違和感
+どんな「呼吸」していますか？|https://tree-of-life.jp/blog/2019/12/17322|その他|呼吸法
+ついに明日発売！！院長 朴澤孝治・著『花粉症は治る病気です〜毒を以て毒を制す、アイゾパシー療法〜』|https://tree-of-life.jp/blog/2019/12/17355|花粉症・アレルギー|花粉症
+ついに本日発売！！院長 朴澤孝治・著『花粉症は治る病気です〜毒を以て毒を制す、アイゾパシー療法〜』|https://tree-of-life.jp/blog/2019/12/17375|花粉症・アレルギー|花粉症
+【１月から始める花粉症対策 】ご自分のアレルギー体質を検査しませんか？|https://tree-of-life.jp/blog/2019/12/17387|花粉症・アレルギー|花粉症,アレルギー
+【１月から始める花粉症対策 】カラダの中から花粉症対策！|https://tree-of-life.jp/blog/2019/12/17390|花粉症・アレルギー|花粉症
+【 Dr. 朴澤のアレルギー研究所 】メルマガ配信スタート!!|https://tree-of-life.jp/blog/2020/01/17427|花粉症・アレルギー|アレルギー
+《 教えて！朴澤院長 》スギ花粉症 Ｑ＆Ａ＿その１|https://tree-of-life.jp/blog/2020/01/17482|花粉症・アレルギー|花粉症,スギ花粉
+花粉症対策の味方！|https://tree-of-life.jp/blog/2020/01/17487|花粉症・アレルギー|花粉症
+《 お灸 de 簡単セルフケア 》花粉症の症状を和らげるツボ|https://tree-of-life.jp/blog/2020/01/17496|花粉症・アレルギー|花粉症,お灸
+桐村里紗先生と朴澤院長の『花粉症は治る病気です』出版記念の対談が行われました!!|https://tree-of-life.jp/blog/2020/01/17509|花粉症・アレルギー|花粉症
+まずは「深呼吸」を･･･|https://tree-of-life.jp/blog/2020/02/17550|その他|呼吸法
+《 教えて！朴澤院長 》スギ花粉症 Ｑ＆Ａ＿その２|https://tree-of-life.jp/blog/2020/02/17565|花粉症・アレルギー|花粉症,スギ花粉
+《 教えて！朴澤院長 》スギ花粉症 Ｑ＆Ａ＿その３|https://tree-of-life.jp/blog/2020/02/17592|花粉症・アレルギー|花粉症,スギ花粉
+【 Dr. 朴澤のアレルギー研究所 】メルマガ配信中!!|https://tree-of-life.jp/blog/2020/03/17598|花粉症・アレルギー|アレルギー
+《 教えて！朴澤院長 》スギ花粉症 Ｑ＆Ａ＿その４|https://tree-of-life.jp/blog/2020/03/17603|花粉症・アレルギー|花粉症,スギ花粉
+呼吸法、ワンポイントレッスン♪|https://tree-of-life.jp/blog/2020/03/17611|マインドフルネス・瞑想|呼吸法
+花粉症の方のための新型コロナウィルス対策|https://tree-of-life.jp/blog/2020/03/17641|花粉症・アレルギー|花粉症
+お灸 de セルフケア《 お灸で免疫機能を高めよう！》|https://tree-of-life.jp/blog/2020/03/17646|統合医療・ホリスティック|お灸,免疫
+『花粉症は治る病気です』〜毒を以て毒を制す、アイゾパシー療法〜、書籍化決定！！|https://tree-of-life.jp/blog/2020/03/17656|花粉症・アレルギー|花粉症
+発声、発音、どもりに関して悩まれている方へ［仙台ボイスセンター］|https://tree-of-life.jp/blog/2020/03/17669|耳鼻咽喉科|声のかすれ
+肩こり・腰痛など、慢性の痛みでお悩みの方、鍼灸がお薦めです|https://tree-of-life.jp/blog/2020/03/17686|統合医療・ホリスティック|鍼灸
+院長朴澤孝治・著【 花粉症は治る病気です 】|https://tree-of-life.jp/blog/2022/01/17726|花粉症・アレルギー|花粉症
+お灸 de セルフケア《東洋医学的、春の過ごし方の注意点》|https://tree-of-life.jp/blog/2020/03/17739|統合医療・ホリスティック|お灸
+食事の選び方のポイント！|https://tree-of-life.jp/blog/2020/03/17757|生活習慣・ヘルスケア|食事・栄養
+《教えて！朴澤院長！》花粉症を治せるアイゾパシー療法とは？|https://tree-of-life.jp/blog/2020/03/17787|花粉症・アレルギー|花粉症
+ドクターズサプリメント、発送致します‼️|https://tree-of-life.jp/blog/2020/07/17837|サプリメント・栄養|サプリメント
+お灸deセルフケア番外編|https://tree-of-life.jp/blog/2020/04/17845|統合医療・ホリスティック|お灸
+【仙台ボイスセンター主催】初！オンラインイベント 5/30(土) 『吃音オンライン座談会』|https://tree-of-life.jp/blog/2020/04/17866|耳鼻咽喉科|
+お灸deセルフケア番外編２|https://tree-of-life.jp/blog/2020/04/17896|統合医療・ホリスティック|お灸
+不足しがちな栄養素|https://tree-of-life.jp/blog/2020/04/17919|サプリメント・栄養|食事・栄養
+「自律神経改善プログラム　オンラインレッスン」準備中です！！|https://tree-of-life.jp/blog/2020/05/18070|自律神経・ストレス|自律神経
+《 教えて！朴澤院長 》梅雨時期に気をつけたいアレルギー|https://tree-of-life.jp/blog/2020/05/18090|花粉症・アレルギー|アレルギー
+お灸 de セルフケア《東洋医学的、梅雨の過ごし方》|https://tree-of-life.jp/blog/2020/05/18095|統合医療・ホリスティック|お灸
+働き盛り世代に必要な栄養素|https://tree-of-life.jp/blog/2020/06/18100|サプリメント・栄養|食事・栄養
+緊急☆6/20（土）TOL元氣プロジェクト【Zoom de 呼吸を知ろう、感じよう】開催！|https://tree-of-life.jp/blog/2020/06/18133|その他|呼吸法
+【 ホメオパシー治療を始める方へ 】|https://tree-of-life.jp/blog/2020/06/18148|ホメオパシー|ホメオパシー
+ホメオパシー治療を始める方へ|https://tree-of-life.jp/blog/2020/04/18150|ホメオパシー|ホメオパシー
+[仙台ボイスセンター]　オンライン治療　初☆実施|https://tree-of-life.jp/blog/2020/06/18191|耳鼻咽喉科|
+【自律神経改善プログラム　オンラインヨガレッスン】開催決定！|https://tree-of-life.jp/blog/2020/06/18210|自律神経・ストレス|自律神経,ヨガ
+呼吸で心穏やかに&#8221;今&#8221;を生きる　6月20日（土）TOLセルフケア【Zoom de 呼吸を知ろう、感じよう】|https://tree-of-life.jp/blog/2020/06/18255|その他|呼吸法
+梅雨シーズン到来☆自律神経を調えよう！6/20【Zoom de 呼吸を知ろう・感じよう】セルフケアセミナー|https://tree-of-life.jp/blog/2020/06/18332|自律神経・ストレス|自律神経,呼吸法
+初開催！TOLセルフケア「オンライン de お灸教室」準備中です！|https://tree-of-life.jp/blog/2020/06/18379|統合医療・ホリスティック|お灸
+TOL元氣プロジェクト『Zoom de はじめての呼吸を知ろう・感じよう』7月も開催決定です！|https://tree-of-life.jp/blog/2020/06/18405|その他|呼吸法
+人生の質を高める・自然治癒力を高める！TOL元氣プロジェクト第2弾！7月18日『Zoom de はじめての呼吸を知ろう・感じよう』開催します|https://tree-of-life.jp/blog/2020/06/18433|その他|呼吸法
+オンラインお灸教室申し込み開始！！|https://tree-of-life.jp/blog/2020/06/18496|統合医療・ホリスティック|お灸
+自律神経改善プログラムー３Stepー3ヶ月プログラム！ step3|https://tree-of-life.jp/blog/2020/06/18500|自律神経・ストレス|自律神経
+《 教えて！朴澤院長 》コロナ疲れで体調が優れない方へ|https://tree-of-life.jp/blog/2020/07/18591|睡眠・疲労|疲労回復
+今週１８日(土)呼吸法セミナーが特別価格に！！締切間近です！！|https://tree-of-life.jp/blog/2020/07/18666|マインドフルネス・瞑想|呼吸法
+8月１日オンラインお灸教室申込受付中♪|https://tree-of-life.jp/blog/2020/07/18687|統合医療・ホリスティック|お灸
+《 教えて！朴澤院長 》夏の不調には腸内環境改善がキーポイント！|https://tree-of-life.jp/blog/2020/07/18823|腸活・SIBO・腸内環境|腸活
+お灸 de セルフケア《 夏バテ対策！ 》|https://tree-of-life.jp/blog/2020/08/18843|統合医療・ホリスティック|お灸
+Zoom de お灸教室「今から始める温活貯金！」開催終了しました♪|https://tree-of-life.jp/blog/2020/08/18864|統合医療・ホリスティック|お灸
+8/22・29（土）『Zoom de 呼吸を知ろう・感じよう』お申し込み受付中です！|https://tree-of-life.jp/blog/2020/08/18911|その他|呼吸法
+自律神経チェックをしませんか？|https://tree-of-life.jp/blog/2020/08/18924|自律神経・ストレス|自律神経
+夏の疲れに鍼灸を♪|https://tree-of-life.jp/blog/2020/08/18973|睡眠・疲労|疲労回復,鍼灸
+栄養不足で起こる味覚異常|https://tree-of-life.jp/blog/2020/08/19063|サプリメント・栄養|食事・栄養
+HIROMI’S  HEALTHY  WORLD ★☆*+:＿自律神経を調えて、夏のカラダをリセットしましょう！|https://tree-of-life.jp/blog/2020/09/19069|自律神経・ストレス|自律神経
+インスタライブゲスト出演決定♪Withコロナを生き抜く統合医療の知恵とは…？|https://tree-of-life.jp/blog/2020/09/19097|統合医療・ホリスティック|統合医療
+お灸 de セルフケア《 東洋医学的、嗅覚・味覚異常の考え方 》|https://tree-of-life.jp/blog/2020/09/19183|統合医療・ホリスティック|お灸
+HIROMI’S HEALTHY WORLD ★☆*+:＿自律神経 Q＆A①|https://tree-of-life.jp/blog/2020/09/19189|自律神経・ストレス|自律神経
+HIROMI’S HEALTHY WORLD ★☆*+:＿日常に呼吸瞑想を取り入れましょう|https://tree-of-life.jp/blog/2020/09/19257|マインドフルネス・瞑想|マインドフルネス,呼吸法
+免疫力向上の強い味方。ビタミンD|https://tree-of-life.jp/blog/2020/10/19272|サプリメント・栄養|サプリメント,免疫
+HIROMI’S HEALTHY WORLD ★☆*+:＿自律神経 Q＆A②|https://tree-of-life.jp/blog/2020/10/19339|自律神経・ストレス|自律神経
+お灸de簡単セルフケア《東洋医学的、秋の過ごし方》|https://tree-of-life.jp/blog/2020/10/19342|統合医療・ホリスティック|お灸
+気象病予防に自律神経のバランスを整えましょう|https://tree-of-life.jp/blog/2020/10/19360|自律神経・ストレス|自律神経
+HIROMI’S HEALTHY WORLD ★☆*+:＿季節の変わり目は自律神経が乱れやすくなります|https://tree-of-life.jp/blog/2020/10/19373|自律神経・ストレス|自律神経
+[声の障害][どもる症状][飲み込みの障害]←オンライン治療が可能です🍀|https://tree-of-life.jp/blog/2020/11/19442|耳鼻咽喉科|声のかすれ
+《 教えて！朴澤院長 》疲れの正体を知ってコロナ疲れを吹き飛ばしましょう！|https://tree-of-life.jp/blog/2020/10/19446|睡眠・疲労|疲労回復
+“心の疲れ”解消の味方になる栄養素|https://tree-of-life.jp/blog/2020/10/19461|サプリメント・栄養|疲労回復,食事・栄養
+冬のオンラインお灸教室開催決定しました！|https://tree-of-life.jp/blog/2020/11/19488|統合医療・ホリスティック|お灸
+12/19（土）『Zoom de 呼吸を知ろう・感じよう』お申し込み受付中です！|https://tree-of-life.jp/blog/2020/11/19514|その他|呼吸法
+HIROMI’S HEALTHY WORLD 〜マインドフルネスウォーキングのススメ〜|https://tree-of-life.jp/blog/2020/11/19537|マインドフルネス・瞑想|マインドフルネス
+今日の心身の疲れを明日に残さない、おやすみ前の疲れ解消呼吸法|https://tree-of-life.jp/blog/2020/11/19545|マインドフルネス・瞑想|呼吸法,疲労回復
+お灸de簡単セルフケア《心の疲れに》|https://tree-of-life.jp/blog/2020/11/19551|睡眠・疲労|疲労回復,お灸
+[仙台ボイスセンター] ★ネット予約割引★ 開始！|https://tree-of-life.jp/blog/2020/12/19561|耳鼻咽喉科|
+お灸 de 簡単セルフケア《 眠りを助けるツボ 》|https://tree-of-life.jp/blog/2020/12/19568|睡眠・疲労|お灸
+12/19（土）オンラインセミナー「呼吸を知ろう・感じよう」参加受付中♪|https://tree-of-life.jp/blog/2020/12/19642|その他|呼吸法
+セルフケアのお灸って？|https://tree-of-life.jp/blog/2020/12/19657|統合医療・ホリスティック|お灸
+12/12オンラインお灸教室申し込み期限迫ってます！|https://tree-of-life.jp/blog/2020/12/19761|統合医療・ホリスティック|お灸
+締切間近！12月19日（土）TOL自律神経改善『Zoom de 呼吸を知ろう・感じよう』|https://tree-of-life.jp/blog/2020/12/19783|自律神経・ストレス|自律神経,呼吸法
+眠りを助ける栄養素。|https://tree-of-life.jp/blog/2020/12/19790|サプリメント・栄養|食事・栄養
+睡眠の質を上げる「眠る前の呼吸法」|https://tree-of-life.jp/blog/2020/12/19862|マインドフルネス・瞑想|呼吸法,睡眠
+1/23 (土) 『Zoom de 呼吸を知ろう・感じよう』開催決定！|https://tree-of-life.jp/blog/2020/12/19912|その他|呼吸法
+2021年の幕開けは、新呼吸から 〜TOL自律神経改善プログラム〜|https://tree-of-life.jp/blog/2021/01/19923|自律神経・ストレス|自律神経,呼吸法
+新春オンラインセミナー　花粉症は治る病気です|https://tree-of-life.jp/blog/2021/01/19952|花粉症・アレルギー|花粉症
+お灸de簡単セルフケア《冬の胃腸不調に》|https://tree-of-life.jp/blog/2021/01/20127|腸活・SIBO・腸内環境|お灸
+2/20 (土)『Zoom de 呼吸を知ろう・感じよう』開催決定！|https://tree-of-life.jp/blog/2021/01/20135|その他|呼吸法
+2月7日（日）オンライン開催【現役医師が教える  アレルギー・花粉症・感染症  対策講座   】|https://tree-of-life.jp/blog/2021/01/20147|花粉症・アレルギー|花粉症,アレルギー
+朗報！！お子さんの栄養不足対策に☆彡|https://tree-of-life.jp/blog/2021/01/20187|サプリメント・栄養|食事・栄養
+3/13 (土)『Zoom de 呼吸を知ろう・感じよう』締切間近、お申込受付中！|https://tree-of-life.jp/blog/2021/03/20256|その他|呼吸法
+Dr.朴澤 統合医療コンサルテーション|https://tree-of-life.jp/concierge/|統合医療・ホリスティック|統合医療
+【子供のためのホメオパシー】朴澤院長とイゲット千恵子さんの対談を会員限定配信中！|https://tree-of-life.jp/blog/2021/02/20342|ホメオパシー|ホメオパシー
+お灸deセルフケア「春のイライラ解消」|https://tree-of-life.jp/blog/2021/03/20347|統合医療・ホリスティック|お灸
+4/17 (土)『Zoom de 呼吸を知ろう・感じよう』開催 します♪|https://tree-of-life.jp/blog/2021/03/20423|その他|呼吸法
+【Dr.朴澤メディカルアカデミー】オンライン動画でセルフケアについて学びましょう〜鍼灸編〜|https://tree-of-life.jp/blog/2021/03/20436|統合医療・ホリスティック|鍼灸
+【Dr.朴澤メディカルアカデミー】オンライン動画でセルフケアについて学びましょう〜仙台ボイスセンター編〜|https://tree-of-life.jp/blog/2021/03/20445|耳鼻咽喉科|
+【Dr.朴澤メディカルアカデミー】オンライン動画でセルフケアについて学びましょう〜サプリメント編〜|https://tree-of-life.jp/blog/2021/03/20458|サプリメント・栄養|サプリメント
+【現役医師が教える アレルギー・花粉症・感染症 対策講座  】動画受講お申込受付中♪|https://tree-of-life.jp/blog/2021/03/20466|花粉症・アレルギー|花粉症,アレルギー
+【対談】桐村里紗 × 朴澤孝治「統合医療を未来のスタンダードへ」|https://tree-of-life.jp/blog/2021/03/20501|統合医療・ホリスティック|統合医療
+鼻の奥に入り込んだ雑菌や花粉を洗い流す！痛くない鼻うがい、ご存知ですか？|https://tree-of-life.jp/blog/2021/03/20568|花粉症・アレルギー|花粉症
+☆頑張る女性の応援サプリメント☆|https://tree-of-life.jp/blog/2021/04/20625|サプリメント・栄養|サプリメント
+4/17 (土)『Zoom de 呼吸を知ろう・感じよう』締切間近、お申込受付中！|https://tree-of-life.jp/blog/2021/04/20636|その他|呼吸法
+5/22 (土)『Zoom de 呼吸を知ろう・感じよう』開催 します♪|https://tree-of-life.jp/blog/2021/04/20673|その他|呼吸法
+6月19日（土）【ZOOM de 呼吸を知ろう・感じよう】開催決定☆|https://tree-of-life.jp/blog/2021/04/20718|その他|呼吸法
+【オンライン限定】アレルギー体質改善相談　ご紹介|https://tree-of-life.jp/blog/2021/06/20976|花粉症・アレルギー|アレルギー
+☆疲れたときの対処方法☆|https://tree-of-life.jp/blog/2021/06/21014|睡眠・疲労|疲労回復
+8/22（日）【オンラインセミナー開催】「ホリスティック医学が目指すもの」|https://tree-of-life.jp/blog/2021/07/21141|統合医療・ホリスティック|
+8/7（土）開催決定【幸せになる呼吸のレッスン】|https://tree-of-life.jp/blog/2021/07/21186|その他|呼吸法
+女性のための鍼灸①|https://tree-of-life.jp/blog/2021/08/21199|統合医療・ホリスティック|鍼灸
+在宅時間が長い今こそ…”声”や”話し方”のお悩み解決のチャンス！|https://tree-of-life.jp/blog/2021/07/21238|耳鼻咽喉科|声のかすれ
+開催間近です♪【オンラインセミナー】ホリスティック医学が目指すもの|https://tree-of-life.jp/blog/2021/08/21310|統合医療・ホリスティック|
+9/25（土）開催【 幸せになる呼吸のレッスン 】|https://tree-of-life.jp/blog/2021/08/21315|その他|呼吸法
+世界初⭐︎ビタミンDの生成を妨げない日焼け止め|https://tree-of-life.jp/blog/2021/08/21351|サプリメント・栄養|サプリメント
+女性のための鍼灸②|https://tree-of-life.jp/blog/2021/09/21467|統合医療・ホリスティック|鍼灸
+10/23（土）開催【 幸せになる呼吸のレッスン 〜感情編〜 】|https://tree-of-life.jp/blog/2021/09/21515|その他|呼吸法
+水素ガス吸入療法が、始まります！|https://tree-of-life.jp/blog/2021/09/21595|サプリメント・栄養|水素
+11/14(日)【オンラインセミナー】ホリスティック医学シンポジウム2021|https://tree-of-life.jp/blog/2021/10/21604|統合医療・ホリスティック|
+【Dr.朴澤メディカルアカデミー】〜Hiromi&#8217;sメソッドの呼吸瞑想〜|https://tree-of-life.jp/blog/2021/10/21697|マインドフルネス・瞑想|マインドフルネス,呼吸法
+11/27（土）開催【 幸せになる呼吸のレッスン 〜self love編〜 】自分を思いやるレッスン１|https://tree-of-life.jp/blog/2021/11/21793|その他|呼吸法
+12/18(土)【幸せになる呼吸のレッスン】2021年の最後は心と思考のお片付け|https://tree-of-life.jp/blog/2021/11/21859|その他|呼吸法
+〜SENDAI光のページェントを眺めながら〜水素ガス吸入療法【 60分 】|https://tree-of-life.jp/blog/2021/12/21970|サプリメント・栄養|水素
+2/6(日)オンライン開催【医師が教えるコロナうつ・スギ花粉症（アレルギー）対策講座】|https://tree-of-life.jp/blog/2022/01/22188|花粉症・アレルギー|花粉症,スギ花粉,アレルギー
+CBDってなんだろう？|https://tree-of-life.jp/blog/2022/02/22282|サプリメント・栄養|CBD
+【まとめ】花粉症でお悩みの方へ|https://tree-of-life.jp/blog/2023/03/22339|花粉症・アレルギー|花粉症
+コロナ禍で、睡眠に問題を抱えている方へ|https://tree-of-life.jp/blog/2022/04/22449|睡眠・疲労|睡眠
+5/28（土）開催【５月病対策　呼吸法 】|https://tree-of-life.jp/blog/2022/04/22473|マインドフルネス・瞑想|呼吸法
+TOL鍼灸再開しました！|https://tree-of-life.jp/blog/2022/05/22494|統合医療・ホリスティック|鍼灸
+6/25（土）開催【気象病・６月病対策　呼吸法 】|https://tree-of-life.jp/blog/2022/06/22550|自律神経・ストレス|呼吸法
+【2022.7月ニュースレター】身体がサビる前に「ビタ水素」でセルフケアを！|https://tree-of-life.jp/blog/2022/07/22708|サプリメント・栄養|水素
+【マイナビ子育て】にて朴澤耳鼻咽喉科・院長朴澤が取材されました。|https://tree-of-life.jp/blog/2022/07/22749|耳鼻咽喉科|のどの違和感
+親子de自律神経改善　〜家庭編〜|https://tree-of-life.jp/blog/2022/07/22865|自律神経・ストレス|自律神経
+「親子de呼吸法レッスン」を再開します！|https://tree-of-life.jp/blog/2022/07/22868|マインドフルネス・瞑想|呼吸法
+8/20（土）セミナー開催【親子 de 呼吸法】〜こどもの「ストレスマネジメント」〜|https://tree-of-life.jp/blog/2022/07/22880|自律神経・ストレス|ストレス,呼吸法
+【YouTube開始しました！】ドクター朴澤　統合医療チャンネル|https://tree-of-life.jp/blog/2022/08/22945|統合医療・ホリスティック|統合医療
+【YouTube】今週の動画シリーズ「めまいとメニエール病」全５話|https://tree-of-life.jp/blog/2022/08/22963|耳鼻咽喉科|めまい
+【YouTube】今週の動画シリーズ「睡眠時無呼吸症候群」全５話|https://tree-of-life.jp/blog/2022/08/22985|睡眠・疲労|呼吸法,睡眠
+【R4.９月ニュースレター】現代人の疲れは脳が原因！？脳疲労を解消しよう！|https://tree-of-life.jp/blog/2022/08/23014|睡眠・疲労|疲労回復
+【YouTube】今週の動画シリーズ「鼻血の止め方」全５話|https://tree-of-life.jp/blog/2022/09/23113|耳鼻咽喉科|
+【YouTube】今週の動画シリーズ「ミトコンドリア」全５話|https://tree-of-life.jp/blog/2022/09/23150|サプリメント・栄養|ミトコンドリア
+【YouTube】今週の動画シリーズ「声のつまり」全５話|https://tree-of-life.jp/blog/2022/09/23155|耳鼻咽喉科|声のかすれ
+【YouTube】今週の動画「冷え性の原因と改善の方法5選。」|https://tree-of-life.jp/blog/2022/10/23178|生活習慣・ヘルスケア|冷え
+うつ病と診断される前に、自律神経のバランスを整えましょう！|https://tree-of-life.jp/blog/2022/10/23194|自律神経・ストレス|自律神経
+【YouTube】今週の動画：良性発作性頭位めまい症の症状・原因・治療法・再発予防のポイント|https://tree-of-life.jp/blog/2022/10/23228|耳鼻咽喉科|めまい
+【R4.10月ニュースレター】冷えの原因と対処法|https://tree-of-life.jp/blog/2022/10/23230|生活習慣・ヘルスケア|冷え
+【YouTube】今週の動画「正しい耳掃除の頻度とやり方。」|https://tree-of-life.jp/blog/2022/10/23244|耳鼻咽喉科|
+疲れたなあ、年のせいかな？なんて思っていませんか？電池切れかもしれませんよ。|https://tree-of-life.jp/blog/2022/10/23256|睡眠・疲労|疲労回復
+ミトコンドリアの活性化と健康寿命の延長の鍵を握るNMN|https://tree-of-life.jp/blog/2022/10/23275|サプリメント・栄養|ミトコンドリア
+ミトコンドリアを活性化する5-ALAは、生命の根源物質！|https://tree-of-life.jp/blog/2022/10/23277|サプリメント・栄養|ミトコンドリア
+人生100年時代を元気に生き抜くには、ミトコンドリアが大切です！|https://tree-of-life.jp/blog/2022/10/23279|サプリメント・栄養|ミトコンドリア
+水素ガス吸入療法で、ミトコンドリアを劣化から守りましょう！|https://tree-of-life.jp/blog/2022/11/23281|サプリメント・栄養|ミトコンドリア,水素
+【YouTube】最新動画「ペットアレルギーからの脱却!!」|https://tree-of-life.jp/blog/2022/11/23341|花粉症・アレルギー|アレルギー
+【Dr.ブログ】冷え性対策をして、寒い冬に備えましょう！|https://tree-of-life.jp/blog/2022/11/23345|生活習慣・ヘルスケア|冷え
+【YouTube】うそ？本当？ヨーグルトを食べると花粉症が治る説|https://tree-of-life.jp/blog/2022/11/23360|花粉症・アレルギー|花粉症
+体質を改善して、ペットアレルギーを克服しましょう！|https://tree-of-life.jp/blog/2022/11/23383|花粉症・アレルギー|アレルギー
+ヨーグルトでアレルギーが治るって本当？|https://tree-of-life.jp/blog/2022/11/23390|花粉症・アレルギー|アレルギー
+【医師解説】ぐるぐるめまいの正体！前庭神経炎の原因と対処法|https://tree-of-life.jp/blog/2022/11/23406|耳鼻咽喉科|めまい
+【R4.12月ニュースレター】腸内細菌を味方にしてこころとからだを健康に！|https://tree-of-life.jp/blog/2022/12/23438|腸活・SIBO・腸内環境|腸活
+【YouTube】最新の動画「うつと思ったらまず副腎を疑え！副腎疲労症候群。」|https://tree-of-life.jp/blog/2022/12/23449|睡眠・疲労|疲労回復
+【Dr.ブログ】疲れが取れない、やる気が出ない、朝布団から起きることができない方へ、うつ病かもと思う前に副腎疲労のことを知ってください|https://tree-of-life.jp/blog/2022/12/23456|睡眠・疲労|疲労回復
+【Dr.ブログ】来年はスギ花粉の大量飛散が予想されています。アレルギー体質改善をしましょう！花粉症は治る病気です。|https://tree-of-life.jp/blog/2022/12/23482|花粉症・アレルギー|花粉症,スギ花粉,アレルギー
+【YouTube】最新の動画「花粉症は治る病気です！花粉症の体質改善。」|https://tree-of-life.jp/blog/2022/12/23494|花粉症・アレルギー|花粉症
+病院で検査しても、原因不明の慢性の症状でお困りではありませんか？遅延型食物アレルギーが原因かもしれません。|https://tree-of-life.jp/blog/2023/01/23526|花粉症・アレルギー|アレルギー
+40〜50代で、声の調子が悪いと感じている方。女性の声変わりかもしれません。|https://tree-of-life.jp/blog/2023/03/23577|耳鼻咽喉科|声のかすれ
+【エクラ】院長が50代女性の声のお悩みについて取材を受けました|https://tree-of-life.jp/blog/2023/03/23618|耳鼻咽喉科|声のかすれ
+【R5.4月ニュースレター】新生活応援特集！声の不調を改善し、コミュ力をUPしましょう！|https://tree-of-life.jp/blog/2023/04/23665|耳鼻咽喉科|声のかすれ
+【2023.6月日程】自律神経改善プログラム|https://tree-of-life.jp/blog/2023/05/23675|自律神経・ストレス|自律神経
+40才を過ぎたら、摂った方がいいサプリメント|https://tree-of-life.jp/blog/2023/05/23693|サプリメント・栄養|サプリメント
+50才を過ぎたら、摂るべきサプリメント|https://tree-of-life.jp/blog/2023/05/23712|サプリメント・栄養|サプリメント
+【R5.6月ニュースレター】　生活習慣改善で健康寿命を伸ばしましょう!|https://tree-of-life.jp/blog/2023/06/23727|生活習慣・ヘルスケア|
+【2023.7月日程】自律神経改善プログラム|https://tree-of-life.jp/blog/2023/06/23730|自律神経・ストレス|自律神経
+60才を過ぎたら、摂るべきサプリメント|https://tree-of-life.jp/blog/2023/06/23732|サプリメント・栄養|サプリメント
+20才までの成長期に、お勧めのサプリメント。腸内環境は20才までに作られます。|https://tree-of-life.jp/blog/2023/06/23752|腸活・SIBO・腸内環境|腸活,サプリメント
+20代から30代にお勧めのサプリメント。副腎疲労と環境ホルモンに注意しましょう。|https://tree-of-life.jp/blog/2023/07/23760|サプリメント・栄養|疲労回復,サプリメント
+【8月日程】自律神経改善プログラム|https://tree-of-life.jp/blog/2023/07/23779|自律神経・ストレス|自律神経
+【2023.9月日程】自律神経改善プログラム|https://tree-of-life.jp/blog/2023/08/23783|自律神経・ストレス|自律神経
+老化のスピードを遅らせる鍵、体のサビとコゲを防ぎましょう|https://tree-of-life.jp/blog/2023/09/23856|生活習慣・ヘルスケア|
+【2023.10月日程】自律神経改善プログラム|https://tree-of-life.jp/blog/2023/09/23865|自律神経・ストレス|自律神経
+【9〜11月】統合医療 秋の健診キャンペーン実施中!!|https://tree-of-life.jp/blog/2023/09/23969|統合医療・ホリスティック|統合医療
+【2023.11月日程】自律神経改善プログラム|https://tree-of-life.jp/blog/2023/10/23989|自律神経・ストレス|自律神経
+【R5.11月ニュースレター】マスクシンドローム と嚥下性肺炎|https://tree-of-life.jp/blog/2023/11/24016|耳鼻咽喉科|嚥下・飲み込み
+【2023.12月日程】自律神経改善プログラム|https://tree-of-life.jp/blog/2023/11/24018|自律神経・ストレス|自律神経
+冷えの原因、ゴースト血管をケアして、老化を食い止めましょう|https://tree-of-life.jp/blog/2023/11/24021|生活習慣・ヘルスケア|冷え
+【2024.1月日程】自律神経改善プログラム|https://tree-of-life.jp/blog/2023/12/24041|自律神経・ストレス|自律神経
+【R5.12月ニュースレター】仙台マインドフルネスセンター、オープンします！|https://tree-of-life.jp/blog/2023/12/24044|マインドフルネス・瞑想|マインドフルネス
+MBSR　マインドフルネスストレス低減法で、幸せで楽しい毎日を過ごしましょう！|https://tree-of-life.jp/blog/2023/12/24063|自律神経・ストレス|ストレス,マインドフルネス
+MBSR「参加者の声」|https://tree-of-life.jp/blog/2023/12/24084|耳鼻咽喉科|声のかすれ,マインドフルネス
+【2024.2月】自律神経改善プログラム|https://tree-of-life.jp/blog/2024/01/24086|自律神経・ストレス|自律神経
+アフターコロナ時代、CBDを活用して、健康に楽しく生活しましょう！|https://tree-of-life.jp/blog/2024/01/24109|サプリメント・栄養|CBD
+【2024.3月】自律神経改善プログラム|https://tree-of-life.jp/blog/2024/02/24176|自律神経・ストレス|自律神経
+【2024.4月】自律神経改善プログラム|https://tree-of-life.jp/blog/2024/03/24302|自律神経・ストレス|自律神経
+忙しい毎日に【15分間のボディスキャン瞑想】を。|https://tree-of-life.jp/blog/2024/03/24333|マインドフルネス・瞑想|マインドフルネス
+【2024.5月】自律神経改善プログラム|https://tree-of-life.jp/blog/2024/04/24434|自律神経・ストレス|自律神経
+【2024.6月】自律神経改善プログラム|https://tree-of-life.jp/blog/2024/05/24528|自律神経・ストレス|自律神経
+【限定公開】自律神経改善プログラム|https://tree-of-life.jp/blog/2024/05/24530|自律神経・ストレス|自律神経
+自律神経のバランスを取って、五月病を克服しましょう！|https://tree-of-life.jp/blog/2024/05/24572|自律神経・ストレス|自律神経
+免疫の老化を防いで、病気の発症を予防しましょう！ミトコンドリアが鍵です。|https://tree-of-life.jp/blog/2024/05/24636|サプリメント・栄養|ミトコンドリア,免疫
+【2024.7月】自律神経改善プログラム|https://tree-of-life.jp/blog/2024/06/24662|自律神経・ストレス|自律神経
+ビタミンBの欠乏に、そして過剰にも気をつけてください。|https://tree-of-life.jp/blog/2024/06/24696|サプリメント・栄養|サプリメント
+【2024.8月】自律神経改善プログラム|https://tree-of-life.jp/blog/2024/07/24780|自律神経・ストレス|自律神経
+脂溶性ビタミンを、大量に長期間飲むと、過剰症のリスクがあります。|https://tree-of-life.jp/blog/2024/07/24803|サプリメント・栄養|サプリメント
+ヘルシーエイジングのためのサプリメントの摂り方|https://tree-of-life.jp/blog/2024/08/24920|サプリメント・栄養|サプリメント
+【2024.9月】自律神経改善プログラム|https://tree-of-life.jp/blog/2024/08/24933|自律神経・ストレス|自律神経
+【R6.8月ニュースレター】質の良い睡眠で暑い夏を乗り切りましょう！|https://tree-of-life.jp/blog/2024/08/24938|睡眠・疲労|睡眠
+【9/17(火)開催】中秋の名月マインドフルネス瞑想会|https://tree-of-life.jp/blog/2024/08/25005|マインドフルネス・瞑想|マインドフルネス
+統合医療健診 ＜秋のキャンペーン＞実施中!!|https://tree-of-life.jp/blog/2024/08/25031|統合医療・ホリスティック|統合医療
+【2024.10月】自律神経改善プログラム|https://tree-of-life.jp/blog/2024/09/25074|自律神経・ストレス|自律神経
+【2024.11月】自律神経改善プログラム|https://tree-of-life.jp/blog/2024/10/25162|自律神経・ストレス|自律神経
+正しい牛乳との付き合い方|https://tree-of-life.jp/blog/2024/10/25195|生活習慣・ヘルスケア|食事・栄養
+【記事掲載】ホリスティックマガジン 2024秋号|https://tree-of-life.jp/blog/2024/10/25266|統合医療・ホリスティック|
+【R6.10月ニュースレター】疲労回復のための休み方|https://tree-of-life.jp/blog/2024/10/25285|睡眠・疲労|疲労回復
+【2024.12月】自律神経改善プログラム|https://tree-of-life.jp/blog/2024/11/25300|自律神経・ストレス|自律神経
+【12月開催】はじめてのマインドフルネス瞑想|https://tree-of-life.jp/blog/2024/11/25321|マインドフルネス・瞑想|マインドフルネス
+CBD製品をご購入頂いた皆様へのお願い|https://tree-of-life.jp/blog/2024/11/25327|サプリメント・栄養|CBD
+化学物質過敏症は、不治の病ではなく、治る症状です。|https://tree-of-life.jp/blog/2024/11/25372|生活習慣・ヘルスケア|化学物質過敏症
+【2025.1月】自律神経改善プログラム|https://tree-of-life.jp/blog/2024/12/25478|自律神経・ストレス|自律神経
+【R6.12月ニュースレター】ストレスから自分を守るマインドフルネスを習得しましょう|https://tree-of-life.jp/blog/2024/12/25511|自律神経・ストレス|ストレス,マインドフルネス
+今月のマインドフルネス【1月】|https://tree-of-life.jp/blog/2024/12/25662|マインドフルネス・瞑想|マインドフルネス
+【2025.2月】自律神経改善プログラム|https://tree-of-life.jp/blog/2025/01/25763|自律神経・ストレス|自律神経
+【2025.2月】今月のマインドフルネス　日程|https://tree-of-life.jp/blog/2025/01/25774|マインドフルネス・瞑想|マインドフルネス
+【2025.3月】自律神経改善プログラム|https://tree-of-life.jp/blog/2025/02/25924|自律神経・ストレス|自律神経
+リーキーガット（腸漏れ）症候群を御存知でしょうか？|https://tree-of-life.jp/blog/2025/03/26017|腸活・SIBO・腸内環境|リーキーガット,腸漏れ
+【2025.4月】自律神経改善プログラム|https://tree-of-life.jp/blog/2025/03/26126|自律神経・ストレス|自律神経
+【2025.5月】自律神経改善プログラム|https://tree-of-life.jp/blog/2025/04/26314|自律神経・ストレス|自律神経
+ストレスへの抵抗力をマインドフルネスで養いましょう！|https://tree-of-life.jp/blog/2025/04/26363|自律神経・ストレス|ストレス,マインドフルネス
+＜ 5/18（日）開催 ＞１Day マインドフルネスリトリート in 仙台|https://tree-of-life.jp/blog/2025/04/26467|マインドフルネス・瞑想|マインドフルネス
+【2025.6月】自律神経改善プログラム|https://tree-of-life.jp/blog/2025/05/26573|自律神経・ストレス|自律神経
+＜五月病・気象病対策＞ 自律神経のバランスを整える 呼吸法レッスン|https://tree-of-life.jp/blog/2025/05/26744|自律神経・ストレス|自律神経,呼吸法
+ミトコンドリアを増やして、ヘルシーエイジングを楽しみましょう！|https://tree-of-life.jp/blog/2025/06/26828|サプリメント・栄養|ミトコンドリア
+【2025.7月】自律神経改善プログラム|https://tree-of-life.jp/blog/2025/06/26877|自律神経・ストレス|自律神経
+【2025.8月】自律神経改善プログラム（内容バージョンアップ）|https://tree-of-life.jp/blog/2025/07/27203|自律神経・ストレス|自律神経
+ストレスの多い毎日を楽に生きるため、マインドフルネスを生活に取り入れましょう！|https://tree-of-life.jp/blog/2025/08/27421|自律神経・ストレス|ストレス,マインドフルネス
+【2025.9月】自律神経改善プログラム＿3回コース〈NEW〉|https://tree-of-life.jp/blog/2025/08/27515|自律神経・ストレス|自律神経
+【2025.10月】自律神経改善プログラム＿3回コース〈NEW〉|https://tree-of-life.jp/blog/2025/09/27657|自律神経・ストレス|自律神経
+朝食は食べるべき？最新の科学的視点から考える|https://tree-of-life.jp/blog/2025/09/27691|生活習慣・ヘルスケア|食事・栄養
+【2025.11月】自律神経改善プログラム＿3回コース〈NEW〉|https://tree-of-life.jp/blog/2025/10/28075|自律神経・ストレス|自律神経
+簡単にできる腸活～第1回：腸と健康の深い関係～|https://tree-of-life.jp/blog/2025/11/28114|腸活・SIBO・腸内環境|腸活
+腸の動きを活発にして、心も体も軽やかに|https://tree-of-life.jp/blog/2025/11/28134|腸活・SIBO・腸内環境|
+12/7(日) 開催 ｜一年を静かに振り返る マインドフルネス・リトリート in 仙台|https://tree-of-life.jp/blog/2025/10/28144|マインドフルネス・瞑想|マインドフルネス
+簡単にできる腸活③〜今すぐできる腸の粘膜バリアを整える生活習慣〜|https://tree-of-life.jp/blog/2025/11/28205|腸活・SIBO・腸内環境|腸活
+【先着10名】ミトコンドリアを活性化する臨床研究の参加者募集|https://tree-of-life.jp/blog/2025/11/28219|サプリメント・栄養|ミトコンドリア
+腸内細菌を育てて「体の土台」を整える ― 通過菌と長期滞在菌の話|https://tree-of-life.jp/blog/2025/12/28287|腸活・SIBO・腸内環境|腸活
+過敏性腸症候群の影に潜む、腸活して悪化する？意外な落とし穴“SIBO”とは|https://tree-of-life.jp/blog/2025/12/28310|腸活・SIBO・腸内環境|SIBO,腸活
+SIBO（小腸内細菌異常増殖症）をハーブで整える──オーストラリアのナチュロパス・ナミさんに聞くハーブ療法の最前線|https://tree-of-life.jp/blog/2026/01/28321|腸活・SIBO・腸内環境|SIBO,腸活
+『健康な毎日のための生活習慣と栄養バランスのミニ相談室』スタートします！|https://tree-of-life.jp/blog/2026/01/28398|サプリメント・栄養|食事・栄養
+疲れやすさや回復力の低下、その鍵は「ミトコンドリア」にあります|https://tree-of-life.jp/blog/2026/01/28447|サプリメント・栄養|疲労回復,ミトコンドリア
+【全2回】春の自律神経とメンタルを整える「メディカル・マインドフルネス」特別セミナー|https://tree-of-life.jp/blog/2026/02/28510|自律神経・ストレス|自律神経,マインドフルネス
+冬の「冷え」と「疲れ」の正体　― 赤血球・ゴースト血管・水素ガス吸入療法 ―|https://tree-of-life.jp/blog/2026/03/28537|サプリメント・栄養|疲労回復,水素,冷え
+風邪のときに起こる「回復睡眠」とは？|https://tree-of-life.jp/blog/2026/03/28586|睡眠・疲労|睡眠,疲労回復
+脳波から考える、睡眠障害の解決法|https://tree-of-life.jp/blog/2026/05/28673|睡眠・疲労|睡眠
+6/27 (土) 開催｜小さなホリスティック・マインドフルネスリトリート in 葉山|https://tree-of-life.jp/blog/2026/05/28764|マインドフルネス・瞑想|マインドフルネス`;
+
+const SYSTEM_CHECKER = `あなたは朴澤耳鼻咽喉科・統合医療センター「Tree of Life」のAIアシスタントです。
+以下は実際のブログ記事一覧です（タイトル|URL|カテゴリ|タグ の形式）：
+
+${ARTICLES}
+
+ユーザーの症状・お悩みを読み、上記の記事一覧の中から最も関連性の高い記事を3件選んでください。
+以下のJSON形式のみで回答してください（前文・後文・マークダウン不要）：
+{"articles":[{"category":"カテゴリ","title":"記事タイトル","url":"URL","reason":"この方に勧める理由（30字以内）"},{"category":"...","title":"...","url":"...","reason":"..."},{"category":"...","title":"...","url":"...","reason":"..."}]}
+URLは必ず上記リストに存在するものだけを使用してください。`;
+
+const SYSTEM_CHAT = `あなたは朴澤耳鼻咽喉科・統合医療センター「Tree of Life」のAI健康コンシェルジュです。
+以下は実際のブログ記事一覧です（タイトル|URL|カテゴリ|タグ の形式）：
+
+${ARTICLES}
+
+ユーザーの質問に対し、上記ブログ記事の内容・テーマをもとに回答してください。
+・専門用語はわかりやすく解説する
+・回答末尾に「これは医療診断ではありません」と明記する
+・最後は朴澤耳鼻咽喉科への受診を促す
+・関連記事があれば1〜2件タイトルとURLを紹介する
+・250字以内にまとめる`;
+
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  document.getElementById('panel-'+t).classList.add('active');
+}
+function setSymptom(t){document.getElementById('symptom-input').value=t}
+function setStatus(msg,vis){
+  document.getElementById('status-text').textContent=msg;
+  document.getElementById('status-bar').classList.toggle('visible',vis);
+}
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+async function runChecker(){
+  const input=document.getElementById('symptom-input').value.trim();
+  if(!input)return;
+  const btn=document.getElementById('check-btn');
+  const ra=document.getElementById('checker-results');
+  btn.disabled=true;btn.innerHTML='<div class="spinner"></div> 検索中…';ra.innerHTML='';
+  setStatus('ブログ記事を照合中…',true);
+  try{
+    const res=await fetch('/claudeproxy.php',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,system:SYSTEM_CHECKER,messages:[{role:'user',content:'このお悩みに関連する記事を3件推薦してください：'+input}]})
+    });
+    const data=await res.json();
+    setStatus('',false);
+    const txt=(data.content||[]).find(b=>b.type==='text');
+    const raw=txt?txt.text:'';
+    const clean=raw.replace(/```json|```/g,'').trim();
+    let parsed;try{parsed=JSON.parse(clean)}catch{parsed=null}
+    if(parsed&&parsed.articles&&parsed.articles.length>0){
+      parsed.articles.forEach(a=>{
+        const card=document.createElement('div');card.className='result-card';
+        const hasUrl=a.url&&a.url.startsWith('http');
+        card.innerHTML=`<div class="rc-category">${escHtml(a.category||'')}</div>
+          <div class="rc-title">${escHtml(a.title||'')}</div>
+          <div class="rc-desc" style="color:var(--teal-600);font-size:11px">✓ ${escHtml(a.reason||'')}</div>
+          ${hasUrl?`<a class="rc-link" href="${escHtml(a.url)}" target="_blank" rel="noopener"><i class="ti ti-external-link" style="font-size:12px" aria-hidden="true"></i>記事を読む</a>`:''}`;
+        ra.appendChild(card);
+      });
+    }else{ra.innerHTML='<div class="no-result"><i class="ti ti-search" style="font-size:24px;color:var(--gray-400);display:block;margin-bottom:8px" aria-hidden="true"></i>該当する記事が見つかりませんでした。<br>別のキーワードでお試しください。</div>'}
+  }catch(e){
+    setStatus('',false);
+    ra.innerHTML='<div class="disclaimer"><i class="ti ti-alert-circle" style="font-size:16px;color:var(--gray-400)" aria-hidden="true"></i><span>取得に失敗しました。しばらくしてからお試しください。</span></div>'
+  }
+  btn.disabled=false;btn.innerHTML='<i class="ti ti-search" aria-hidden="true"></i>再度検索する ↗'
+}
+
+const chatHistory=[];
+function appendMsg(role,text){
+  const c=document.getElementById('chat-messages');
+  const w=document.createElement('div');w.className='msg '+role;
+  const now=new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+  if(role==='ai'){w.innerHTML=`<div class="ai-avatar"><i class="ti ti-robot" style="font-size:13px;color:var(--teal-600)" aria-hidden="true"></i></div><div class="msg-bubble">${escHtml(text)}</div><div class="msg-time">${now}</div>`}
+  else{w.innerHTML=`<div class="msg-bubble">${escHtml(text)}</div><div class="msg-time">${now}</div>`}
+  c.appendChild(w);c.scrollTop=c.scrollHeight;
+}
+function appendLoading(){
+  const c=document.getElementById('chat-messages');
+  const w=document.createElement('div');w.className='msg ai';w.id='loading-msg';
+  w.innerHTML=`<div class="ai-avatar"><i class="ti ti-robot" style="font-size:13px;color:var(--teal-600)" aria-hidden="true"></i></div><div class="msg-bubble"><div class="loading-dots"><span></span><span></span><span></span></div></div>`;
+  c.appendChild(w);c.scrollTop=c.scrollHeight;
+}
+async function sendChat(){
+  const input=document.getElementById('chat-input');
+  const text=input.value.trim();if(!text)return;
+  appendMsg('user',text);chatHistory.push({role:'user',content:text});
+  input.value='';autoResize(input);
+  const btn=document.getElementById('send-btn');btn.disabled=true;appendLoading();
+  try{
+    const res=await fetch('/claudeproxy.php',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,system:SYSTEM_CHAT,messages:chatHistory})
+    });
+    const data=await res.json();
+    const txt=(data.content||[]).find(b=>b.type==='text');
+    const reply=txt?txt.text.trim():'回答を取得できませんでした。';
+    chatHistory.push({role:'assistant',content:reply});
+    document.getElementById('loading-msg')?.remove();appendMsg('ai',reply);
+  }catch{
+    document.getElementById('loading-msg')?.remove();
+    appendMsg('ai','申し訳ありません、応答の取得に失敗しました。しばらくしてから再度お試しください。');
+  }
+  btn.disabled=false;
+}
+function sendQuickQ(q){document.getElementById('chat-input').value=q;sendChat()}
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat()}}
+function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,100)+'px'}
+</script>
+</body>
+</html>
