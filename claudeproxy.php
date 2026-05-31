@@ -19,7 +19,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-if (strpos($origin, ALLOWED_ORIGIN) !== 0) {
+// 同一オリジン（originヘッダーなし）または許可ドメインからのみ受け付ける
+if ($origin !== '' && strpos($origin, ALLOWED_ORIGIN) !== 0) {
     http_response_code(403);
     echo json_encode(['error' => 'Forbidden']);
     exit;
