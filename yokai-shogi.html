@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>妖怪将棋</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0520;--bg2:#1a0a35;--bg3:#251245;
+  --gold:#c8a84b;--gold2:#e8c870;
+  --red:#cc3344;--blue:#3366cc;
+  --text:#f0e6ff;--text2:#a090c0;
+  --border:#4a2a7a;
+  --p1:#cc3344;--p2:#3366cc;
+  --cell:72px;
+}
+body{font-family:'Hiragino Kaku Gothic Pro','Yu Gothic',sans-serif;
+  background:var(--bg);color:var(--text);min-height:100vh;
+  display:flex;align-items:center;justify-content:center;overflow-x:hidden}
+
+/* ======= SCREENS ======= */
+.screen{display:none;flex-direction:column;align-items:center;gap:16px;
+  max-width:600px;width:100%;padding:20px}
+.screen.active{display:flex}
+
+/* ======= START SCREEN ======= */
+.title-wrap{text-align:center;margin-bottom:8px}
+.title-kanji{font-size:52px;font-weight:900;letter-spacing:4px;
+  background:linear-gradient(135deg,var(--gold),var(--gold2),var(--gold));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  text-shadow:none;filter:drop-shadow(0 0 20px rgba(200,168,75,0.5))}
+.title-sub{font-size:13px;color:var(--text2);letter-spacing:.15em;margin-top:4px}
+.intro-box{background:var(--bg2);border:1px solid var(--border);border-radius:12px;
+  padding:16px 20px;width:100%;font-size:13px;line-height:1.8;color:var(--text2)}
+.intro-box h3{color:var(--gold);margin-bottom:8px;font-size:14px}
+.btn{border:none;border-radius:10px;padding:12px 32px;font-size:16px;font-weight:700;
+  cursor:pointer;transition:all .2s;letter-spacing:.1em}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1a0a35}
+.btn-gold:hover{transform:scale(1.04);box-shadow:0 4px 20px rgba(200,168,75,.4)}
+.btn-sm{font-size:13px;padding:8px 20px}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text2)}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ======= LEGEND TABLE ======= */
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%}
+.legend-item{background:var(--bg3);border:1px solid var(--border);border-radius:8px;
+  padding:8px 10px;display:flex;align-items:center;gap:8px;font-size:12px}
+.legend-emoji{font-size:20px;min-width:28px;text-align:center}
+.legend-info{display:flex;flex-direction:column;gap:2px}
+.legend-name{font-weight:700;color:var(--text)}
+.legend-rank{color:var(--text2);font-size:11px}
+.legend-special{color:var(--gold);font-size:11px}
+
+/* ======= HANDOFF SCREEN ======= */
+.handoff-box{background:var(--bg2);border:2px solid var(--gold);border-radius:16px;
+  padding:32px;text-align:center;width:100%;gap:16px;display:flex;flex-direction:column;align-items:center}
+.handoff-icon{font-size:64px}
+.handoff-title{font-size:22px;font-weight:700;color:var(--gold)}
+.handoff-desc{font-size:14px;color:var(--text2);line-height:1.7}
+
+/* ======= SETUP SCREEN ======= */
+.setup-header{width:100%;display:flex;align-items:center;justify-content:space-between}
+.player-badge{padding:6px 16px;border-radius:20px;font-weight:700;font-size:13px}
+.p1-badge{background:rgba(204,51,68,.2);border:1px solid var(--p1);color:var(--p1)}
+.p2-badge{background:rgba(51,102,204,.2);border:1px solid var(--p2);color:var(--p2)}
+.setup-board{display:grid;grid-template-columns:repeat(5,var(--cell));
+  gap:3px;background:var(--bg3);padding:6px;border-radius:10px;
+  border:1px solid var(--border)}
+.board-cell{width:var(--cell);height:var(--cell);border-radius:6px;
+  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  position:relative;transition:all .15s;flex-direction:column;gap:2px}
+.board-cell:hover{border-color:var(--gold);background:rgba(200,168,75,.1)}
+.board-cell.zone-p1{background:rgba(204,51,68,.07);border-color:rgba(204,51,68,.2)}
+.board-cell.zone-p2{background:rgba(51,102,204,.07);border-color:rgba(51,102,204,.2)}
+.board-cell.selected{border-color:var(--gold)!important;background:rgba(200,168,75,.25)!important;
+  box-shadow:0 0 12px rgba(200,168,75,.3)}
+.board-cell.valid-move{border-color:rgba(100,200,100,.5)!important;
+  background:rgba(100,200,100,.1)!important}
+.board-cell.valid-attack{border-color:rgba(220,80,80,.6)!important;
+  background:rgba(220,80,80,.12)!important}
+.piece-on-board{display:flex;flex-direction:column;align-items:center;gap:1px;
+  width:100%;height:100%;justify-content:center}
+.piece-emoji{font-size:26px;line-height:1}
+.piece-name{font-size:9px;font-weight:700;letter-spacing:.05em}
+.piece-rank-dot{position:absolute;top:4px;right:5px;font-size:9px;
+  color:rgba(255,255,255,0.4)}
+.piece-back{font-size:28px;opacity:.7}
+.piece-owner-p1{color:var(--p1)}
+.piece-owner-p2{color:var(--p2)}
+
+/* Inventory */
+.inventory-label{font-size:12px;color:var(--text2);align-self:flex-start}
+.inventory{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;width:100%}
+.inv-piece{background:var(--bg3);border:1px solid var(--border);border-radius:8px;
+  padding:6px 8px;cursor:pointer;transition:all .15s;display:flex;
+  flex-direction:column;align-items:center;gap:3px;min-width:56px}
+.inv-piece:hover{border-color:var(--gold);background:rgba(200,168,75,.1)}
+.inv-piece.selected{border-color:var(--gold);background:rgba(200,168,75,.2);
+  box-shadow:0 0 10px rgba(200,168,75,.3)}
+.inv-piece .emoji{font-size:24px}
+.inv-piece .name{font-size:10px;text-align:center}
+.inv-piece.used{opacity:.3;cursor:not-allowed;pointer-events:none}
+
+/* ======= PLAY SCREEN ======= */
+.game-header{width:100%;display:flex;align-items:center;justify-content:space-between;
+  padding:8px 0}
+.turn-indicator{padding:8px 20px;border-radius:20px;font-weight:700;font-size:14px;
+  text-align:center}
+.captured-row{width:100%;display:flex;gap:4px;flex-wrap:wrap;min-height:28px}
+.captured-piece{font-size:18px;opacity:.6}
+.status-msg{font-size:13px;color:var(--text2);text-align:center;min-height:20px}
+
+/* ======= BATTLE OVERLAY ======= */
+.battle-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);
+  display:none;align-items:center;justify-content:center;z-index:100;
+  flex-direction:column;gap:16px}
+.battle-overlay.active{display:flex}
+.battle-box{background:var(--bg2);border:2px solid var(--gold);border-radius:20px;
+  padding:32px 40px;text-align:center;display:flex;flex-direction:column;
+  align-items:center;gap:16px;max-width:380px;width:90%}
+.battle-title{font-size:18px;font-weight:700;color:var(--gold);letter-spacing:.1em}
+.battle-pieces{display:flex;align-items:center;gap:24px}
+.battle-piece{display:flex;flex-direction:column;align-items:center;gap:6px}
+.battle-piece-emoji{font-size:56px}
+.battle-piece-name{font-size:14px;font-weight:700}
+.battle-piece-owner{font-size:12px}
+.battle-vs{font-size:28px;font-weight:900;color:var(--text2)}
+.battle-result{font-size:22px;font-weight:700;padding:8px 20px;
+  border-radius:10px;margin-top:8px}
+.result-win{background:rgba(100,200,100,.2);color:#6fda6f;border:1px solid #4aaa4a}
+.result-lose{background:rgba(220,80,80,.2);color:#ff6666;border:1px solid #aa3333}
+.result-tie{background:rgba(200,168,75,.2);color:var(--gold);border:1px solid var(--gold)}
+
+/* ======= WIN SCREEN ======= */
+.win-title{font-size:48px;font-weight:900;letter-spacing:4px;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.win-sub{font-size:18px;color:var(--text2)}
+.win-icon{font-size:80px}
+
+/* Animations */
+@keyframes fadeIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.anim-in{animation:fadeIn .3s ease}
+.anim-shake{animation:shake .3s ease}
+
+/* Coord labels */
+.board-coords{display:grid;grid-template-columns:repeat(5,var(--cell));gap:3px;
+  padding:0 6px;width:fit-content}
+.coord{text-align:center;font-size:10px;color:var(--text2)}
+
+@media(max-width:420px){
+  :root{--cell:58px}
+  .piece-emoji{font-size:20px}
+  .battle-piece-emoji{font-size:44px}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== START SCREEN ===== -->
+<div class="screen active" id="screen-start">
+  <div class="title-wrap">
+    <div class="title-kanji">妖怪将棋</div>
+    <div class="title-sub">YOKAI SHŌGI — 隠れた力で戦え</div>
+  </div>
+
+  <div class="intro-box">
+    <h3>🎴 ゲームルール</h3>
+    <p>
+      軍人将棋と同じ発想で、<strong style="color:var(--gold)">妖怪</strong>たちが戦う2人対戦ゲームです。<br>
+      相手の駒の強さは見えません。戦ってはじめてわかります。<br>
+      相手の<strong style="color:var(--gold)">妖怪の書</strong>を奪えば勝利！
+    </p>
+  </div>
+
+  <div style="width:100%">
+    <div style="font-size:12px;color:var(--text2);margin-bottom:8px">駒の強さ（上が強い）</div>
+    <div class="legend" id="legend-list"></div>
+  </div>
+
+  <div class="intro-box" style="margin-top:4px">
+    <h3>⚡ 特殊ルール</h3>
+    <p>
+      <strong style="color:var(--gold)">御札</strong>は最弱ですが、唯一<strong style="color:#ff8888">鬼</strong>に勝てます。<br>
+      同じ強さの妖怪が戦うと<strong style="color:var(--gold2)">引き分け（相討ち）</strong>です。<br>
+      <strong style="color:var(--gold)">妖怪の書</strong>は動けません。全ての駒に負けます。
+    </p>
+  </div>
+
+  <button class="btn btn-gold" onclick="startGame()">ゲームを始める</button>
+</div>
+
+<!-- ===== HANDOFF SCREEN ===== -->
+<div class="screen" id="screen-handoff">
+  <div class="handoff-box">
+    <div class="handoff-icon" id="handoff-icon">🔄</div>
+    <div class="handoff-title" id="handoff-title"></div>
+    <div class="handoff-desc" id="handoff-desc"></div>
+    <button class="btn btn-gold" onclick="handoffConfirm()" id="handoff-btn">確認</button>
+  </div>
+</div>
+
+<!-- ===== SETUP SCREEN ===== -->
+<div class="screen" id="screen-setup">
+  <div class="setup-header">
+    <div id="setup-badge" class="player-badge p1-badge">プレイヤー1 配置中</div>
+    <div style="font-size:12px;color:var(--text2)" id="setup-remaining">残り 10 個</div>
+    <button class="btn btn-sm btn-outline" onclick="randomSetup()">ランダム配置</button>
+  </div>
+
+  <div class="board-coords" id="setup-board-wrap">
+    <div class="setup-board" id="setup-board"></div>
+  </div>
+
+  <div class="inventory-label">▼ 配置する駒をクリックして選び、盤面に置いてください</div>
+  <div class="inventory" id="setup-inventory"></div>
+
+  <button class="btn btn-gold" id="setup-done-btn" onclick="setupDone()" disabled>配置完了</button>
+</div>
+
+<!-- ===== PLAY SCREEN ===== -->
+<div class="screen" id="screen-play">
+  <div class="game-header">
+    <div>
+      <div style="font-size:11px;color:var(--text2)">プレイヤー2</div>
+      <div class="captured-row" id="captured-p2"></div>
+    </div>
+    <div class="turn-indicator" id="turn-badge">P1の番</div>
+    <div style="text-align:right">
+      <div style="font-size:11px;color:var(--text2)">プレイヤー1</div>
+      <div class="captured-row" id="captured-p1"></div>
+    </div>
+  </div>
+
+  <div class="setup-board" id="play-board"></div>
+
+  <div class="status-msg" id="status-msg">駒を選んでください</div>
+  <button class="btn btn-sm btn-outline" onclick="deselectAll()" id="cancel-btn" style="display:none">選択を解除</button>
+</div>
+
+<!-- ===== WIN SCREEN ===== -->
+<div class="screen" id="screen-win">
+  <div class="win-icon" id="win-icon">🏆</div>
+  <div class="win-title" id="win-title">勝利！</div>
+  <div class="win-sub" id="win-sub"></div>
+  <button class="btn btn-gold" onclick="location.reload()" style="margin-top:16px">もう一度プレイ</button>
+</div>
+
+<!-- ===== BATTLE OVERLAY ===== -->
+<div class="battle-overlay" id="battle-overlay">
+  <div class="battle-box anim-in">
+    <div class="battle-title">⚔️ 妖怪バトル！</div>
+    <div class="battle-pieces">
+      <div class="battle-piece">
+        <div class="battle-piece-emoji" id="b-atk-emoji">👹</div>
+        <div class="battle-piece-name" id="b-atk-name">鬼</div>
+        <div class="battle-piece-owner" id="b-atk-owner">P1</div>
+      </div>
+      <div class="battle-vs">VS</div>
+      <div class="battle-piece">
+        <div class="battle-piece-emoji" id="b-def-emoji">🦅</div>
+        <div class="battle-piece-name" id="b-def-name">天狗</div>
+        <div class="battle-piece-owner" id="b-def-owner">P2</div>
+      </div>
+    </div>
+    <div class="battle-result" id="b-result">勝者: 攻撃側</div>
+    <button class="btn btn-gold btn-sm" onclick="closeBattle()">続ける</button>
+  </div>
+</div>
+
+<script>
+// ==================== DATA ====================
+const PIECES = [
+  { id:'oni',      name:'鬼',       emoji:'👹', rank:8, desc:'最強の妖怪。御札以外に負けない' },
+  { id:'tengu',    name:'天狗',     emoji:'🦅', rank:7, desc:'山の守護神' },
+  { id:'orochi',   name:'大蛇',     emoji:'🐉', rank:6, desc:'八岐大蛇の末裔' },
+  { id:'kappa',    name:'河童',     emoji:'🐢', rank:5, desc:'水辺に潜む妖怪' },
+  { id:'kitsune',  name:'狐火',     emoji:'🦊', rank:4, desc:'九尾の狐の力' },
+  { id:'tanuki',   name:'化け狸',   emoji:'🦝', rank:3, desc:'百年生きた狸' },
+  { id:'yukionna', name:'雪女',     emoji:'🌨️', rank:2, desc:'冬の精霊' },
+  { id:'noppera',  name:'のっぺら坊',emoji:'😶', rank:1, desc:'顔のない妖怪' },
+  { id:'ofuda',    name:'御札',     emoji:'📜', rank:0, special:true, desc:'鬼のみに勝てる霊符' },
+  { id:'book',     name:'妖怪の書', emoji:'📕', rank:-1, isFlag:true, desc:'守るべき秘書（動けない）' },
+];
+
+const PIECE_MAP = Object.fromEntries(PIECES.map(p=>[p.id,p]));
+const ROWS=4, COLS=5;
+
+// ==================== GAME STATE ====================
+let state = {
+  phase: 'start',
+  currentPlayer: 1,
+  board: [],   // [row][col] = null | {player,pieceId}
+  setupPlayer: 1,
+  placedByPlayer: {1:[],2:[]},
+  selected: null,      // {row,col} during play
+  captured: {1:[],2:[]},
+  battlePending: null, // {attackerCell,defenderCell,result,atkPiece,defPiece}
+};
+
+function emptyBoard(){
+  return Array.from({length:ROWS},()=>Array(COLS).fill(null));
+}
+
+// ==================== LEGEND ====================
+function buildLegend(){
+  const el = document.getElementById('legend-list');
+  PIECES.forEach(p=>{
+    const d = document.createElement('div');
+    d.className='legend-item';
+    d.innerHTML=`<div class="legend-emoji">${p.emoji}</div>
+    <div class="legend-info">
+      <div class="legend-name">${p.name}</div>
+      <div class="legend-rank">${p.isFlag?'動けない・最弱':p.special?'特殊':'強さ '+p.rank}</div>
+      ${p.special?`<div class="legend-special">鬼のみ撃破</div>`:''}
+    </div>`;
+    el.appendChild(d);
+  });
+}
+
+// ==================== START ====================
+function startGame(){
+  state.board = emptyBoard();
+  state.placedByPlayer = {1:[],2:[]};
+  state.captured = {1:[],2:[]};
+  state.setupPlayer = 1;
+  showScreen('screen-handoff');
+  showHandoff(1,'setup');
+}
+
+function showHandoff(player, type){
+  const color = player===1?'#cc3344':'#3366cc';
+  if(type==='setup'){
+    document.getElementById('handoff-icon').textContent = player===1?'⚔️':'🛡️';
+    document.getElementById('handoff-title').innerHTML =
+      `<span style="color:${color}">プレイヤー${player}</span>へ渡してください`;
+    document.getElementById('handoff-desc').textContent =
+      `プレイヤー${player}が画面を確認したら「確認」を押してください。相手の駒配置を見ないでください。`;
+    document.getElementById('handoff-btn').textContent = '確認（配置画面へ）';
+    handoffNextAction = ()=>showSetup(player);
+  } else {
+    document.getElementById('handoff-icon').textContent = '🎮';
+    document.getElementById('handoff-title').textContent = 'ゲーム開始！';
+    document.getElementById('handoff-desc').textContent =
+      '両プレイヤーの配置が完了しました。プレイヤー1から始めます。';
+    document.getElementById('handoff-btn').textContent = 'ゲームを始める';
+    handoffNextAction = ()=>startPlay();
+  }
+}
+
+let handoffNextAction = null;
+function handoffConfirm(){
+  if(handoffNextAction) handoffNextAction();
+}
+
+// ==================== SETUP ====================
+function showSetup(player){
+  state.setupPlayer = player;
+  showScreen('screen-setup');
+  const badge = document.getElementById('setup-badge');
+  badge.textContent = `プレイヤー${player} 配置中`;
+  badge.className = 'player-badge '+(player===1?'p1-badge':'p2-badge');
+  renderSetupBoard();
+  renderInventory();
+  updateSetupRemaining();
+}
+
+let selectedInvPiece = null;
+
+function renderSetupBoard(){
+  const el = document.getElementById('setup-board');
+  el.innerHTML='';
+  const p = state.setupPlayer;
+  const zone = p===1?[2,3]:[0,1];
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      const cell = document.createElement('div');
+      cell.className='board-cell';
+      const inZone = zone.includes(r);
+      if(inZone) cell.classList.add(p===1?'zone-p1':'zone-p2');
+
+      const piece = state.board[r][c];
+      if(piece){
+        cell.innerHTML=renderPiece(piece,true,p);
+      } else if(inZone){
+        cell.style.opacity='.8';
+      } else {
+        cell.style.opacity='.3';
+        cell.style.pointerEvents='none';
+      }
+
+      if(inZone){
+        cell.onclick=()=>placePiece(r,c);
+      }
+      el.appendChild(cell);
+    }
+  }
+}
+
+function renderPiece(piece, showFace, viewingPlayer){
+  const pd = PIECE_MAP[piece.pieceId];
+  const isOwn = piece.player===viewingPlayer;
+  if(showFace && isOwn){
+    const cls = piece.player===1?'piece-owner-p1':'piece-owner-p2';
+    return `<div class="piece-on-board ${cls}">
+      <div class="piece-emoji">${pd.emoji}</div>
+      <div class="piece-name">${pd.name}</div>
+    </div>`;
+  } else {
+    const cls = piece.player===1?'piece-owner-p1':'piece-owner-p2';
+    return `<div class="piece-on-board ${cls}">
+      <div class="piece-back">🀫</div>
+      <div class="piece-name" style="font-size:8px">P${piece.player}</div>
+    </div>`;
+  }
+}
+
+function renderInventory(){
+  const el = document.getElementById('setup-inventory');
+  el.innerHTML='';
+  selectedInvPiece = null;
+  const placed = state.placedByPlayer[state.setupPlayer];
+  PIECES.forEach(p=>{
+    const div = document.createElement('div');
+    div.className='inv-piece';
+    div.id='inv-'+p.id;
+    const isUsed = placed.includes(p.id);
+    if(isUsed) div.classList.add('used');
+    div.innerHTML=`<div class="emoji">${p.emoji}</div><div class="name">${p.name}</div>`;
+    div.onclick=()=>selectInvPiece(p.id);
+    el.appendChild(div);
+  });
+}
+
+function selectInvPiece(pid){
+  document.querySelectorAll('.inv-piece').forEach(e=>e.classList.remove('selected'));
+  selectedInvPiece = pid;
+  document.getElementById('inv-'+pid).classList.add('selected');
+}
+
+function placePiece(r,c){
+  if(!selectedInvPiece) return;
+  const p = state.setupPlayer;
+  // remove existing piece from this cell if any
+  const existing = state.board[r][c];
+  if(existing && existing.player===p){
+    state.placedByPlayer[p] = state.placedByPlayer[p].filter(x=>x!==existing.pieceId);
+  }
+  // if another cell has this piece, remove it
+  for(let row=0;row<ROWS;row++){
+    for(let col=0;col<COLS;col++){
+      if(state.board[row][col]?.player===p && state.board[row][col]?.pieceId===selectedInvPiece){
+        state.board[row][col]=null;
+        state.placedByPlayer[p]=state.placedByPlayer[p].filter(x=>x!==selectedInvPiece);
+      }
+    }
+  }
+  state.board[r][c]={player:p, pieceId:selectedInvPiece};
+  state.placedByPlayer[p].push(selectedInvPiece);
+  selectedInvPiece=null;
+  renderSetupBoard();
+  renderInventory();
+  updateSetupRemaining();
+}
+
+function updateSetupRemaining(){
+  const placed = state.placedByPlayer[state.setupPlayer].length;
+  const rem = PIECES.length - placed;
+  document.getElementById('setup-remaining').textContent=`残り ${rem} 個`;
+  document.getElementById('setup-done-btn').disabled = rem>0;
+}
+
+function randomSetup(){
+  const p = state.setupPlayer;
+  const zone = p===1?[2,3]:[0,1];
+  // clear existing
+  zone.forEach(r=>{for(let c=0;c<COLS;c++) state.board[r][c]=null;});
+  state.placedByPlayer[p]=[];
+  const shuffled=[...PIECES].sort(()=>Math.random()-.5);
+  const cells=zone.flatMap(r=>Array.from({length:COLS},(_,c)=>({r,c}))).sort(()=>Math.random()-.5);
+  shuffled.forEach((piece,i)=>{
+    const {r,c}=cells[i];
+    state.board[r][c]={player:p,pieceId:piece.id};
+    state.placedByPlayer[p].push(piece.id);
+  });
+  selectedInvPiece=null;
+  renderSetupBoard();
+  renderInventory();
+  updateSetupRemaining();
+}
+
+function setupDone(){
+  const p = state.setupPlayer;
+  if(state.placedByPlayer[p].length<PIECES.length) return;
+  if(p===1){
+    showScreen('screen-handoff');
+    showHandoff(2,'setup');
+    handoffNextAction=()=>showSetup(2);
+  } else {
+    showScreen('screen-handoff');
+    showHandoff(null,'start');
+  }
+}
+
+// ==================== PLAY ====================
+function startPlay(){
+  state.phase='play';
+  state.currentPlayer=1;
+  state.selected=null;
+  showScreen('screen-play');
+  renderPlayBoard();
+  updateTurnBadge();
+}
+
+function renderPlayBoard(){
+  const el=document.getElementById('play-board');
+  el.innerHTML='';
+  const cp=state.currentPlayer;
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      const cell=document.createElement('div');
+      cell.className='board-cell';
+      const piece=state.board[r][c];
+      if(state.selected){
+        const {row:sr,col:sc}=state.selected;
+        if(r===sr&&c===sc) cell.classList.add('selected');
+        else if(isValidMove(sr,sc,r,c,cp)){
+          if(piece&&piece.player!==cp) cell.classList.add('valid-attack');
+          else cell.classList.add('valid-move');
+        }
+      }
+      if(piece){
+        const showFull = piece.player===cp;
+        cell.innerHTML=renderPiece(piece,showFull,cp);
+      }
+      cell.onclick=()=>cellClick(r,c);
+      el.appendChild(cell);
+    }
+  }
+  renderCaptured();
+}
+
+function isValidMove(fr,fc,tr,tc,player){
+  // must be adjacent (no diagonal)
+  const dr=Math.abs(tr-fr), dc=Math.abs(tc-fc);
+  if(dr+dc!==1) return false;
+  const target=state.board[tr][tc];
+  if(target&&target.player===player) return false; // can't take own piece
+  return true;
+}
+
+function cellClick(r,c){
+  if(state.phase!=='play') return;
+  const cp=state.currentPlayer;
+  const piece=state.board[r][c];
+
+  if(state.selected){
+    const {row:sr,col:sc}=state.selected;
+    if(r===sr&&c===sc){
+      // deselect
+      state.selected=null;
+      document.getElementById('cancel-btn').style.display='none';
+      renderPlayBoard();
+      setStatus('駒を選んでください');
+      return;
+    }
+    if(isValidMove(sr,sc,r,c,cp)){
+      executeMove(sr,sc,r,c);
+      return;
+    }
+    // select different own piece
+    if(piece&&piece.player===cp){
+      state.selected={row:r,col:c};
+      renderPlayBoard();
+      setStatus(`${PIECE_MAP[piece.pieceId].name}を選択中`);
+      return;
+    }
+    state.selected=null;
+    document.getElementById('cancel-btn').style.display='none';
+    renderPlayBoard();
+    setStatus('駒を選んでください');
+    return;
+  }
+
+  if(piece&&piece.player===cp){
+    if(PIECE_MAP[piece.pieceId].isFlag){
+      setStatus('妖怪の書は動けません');
+      return;
+    }
+    state.selected={row:r,col:c};
+    document.getElementById('cancel-btn').style.display='';
+    renderPlayBoard();
+    setStatus(`${PIECE_MAP[piece.pieceId].name}を選択中 — 移動先をクリック`);
+  }
+}
+
+function deselectAll(){
+  state.selected=null;
+  document.getElementById('cancel-btn').style.display='none';
+  renderPlayBoard();
+  setStatus('駒を選んでください');
+}
+
+function executeMove(fr,fc,tr,tc){
+  const attacker=state.board[fr][fc];
+  const defender=state.board[tr][tc];
+  state.selected=null;
+  document.getElementById('cancel-btn').style.display='none';
+
+  if(!defender){
+    // simple move
+    state.board[tr][tc]=attacker;
+    state.board[fr][fc]=null;
+    endTurn();
+    return;
+  }
+
+  // battle!
+  const result=resolveBattle(attacker,defender);
+  showBattle(attacker,defender,result,fr,fc,tr,tc);
+}
+
+function resolveBattle(atk,def){
+  const ap=PIECE_MAP[atk.pieceId], dp=PIECE_MAP[def.pieceId];
+  // flag always loses
+  if(dp.isFlag) return 'attacker';
+  if(ap.isFlag) return 'defender';
+  // ofuda beats oni only
+  if(ap.special && dp.id==='oni') return 'attacker';
+  if(dp.special && ap.id==='oni') return 'defender';
+  if(ap.special) return 'defender'; // ofuda loses to others
+  if(dp.special) return 'attacker';
+  if(ap.rank>dp.rank) return 'attacker';
+  if(ap.rank<dp.rank) return 'defender';
+  return 'tie';
+}
+
+function showBattle(atk,def,result,fr,fc,tr,tc){
+  const ap=PIECE_MAP[atk.pieceId], dp=PIECE_MAP[def.pieceId];
+  document.getElementById('b-atk-emoji').textContent=ap.emoji;
+  document.getElementById('b-atk-name').textContent=ap.name;
+  document.getElementById('b-atk-owner').textContent='プレイヤー'+atk.player;
+  document.getElementById('b-def-emoji').textContent=dp.emoji;
+  document.getElementById('b-def-name').textContent=dp.name;
+  document.getElementById('b-def-owner').textContent='プレイヤー'+def.player;
+
+  const res=document.getElementById('b-result');
+  if(result==='attacker'){
+    res.textContent=`${ap.name} の勝利！`;
+    res.className='battle-result result-win';
+  } else if(result==='defender'){
+    res.textContent=`${dp.name} の勝利！`;
+    res.className='battle-result result-lose';
+  } else {
+    res.textContent='相討ち…';
+    res.className='battle-result result-tie';
+  }
+
+  state.battlePending={fr,fc,tr,tc,atk,def,result};
+  document.getElementById('battle-overlay').classList.add('active');
+}
+
+function closeBattle(){
+  document.getElementById('battle-overlay').classList.remove('active');
+  const {fr,fc,tr,tc,atk,def,result}=state.battlePending;
+  state.battlePending=null;
+
+  if(result==='attacker'){
+    state.captured[atk.player].push(def.pieceId);
+    state.board[tr][tc]=atk;
+    state.board[fr][fc]=null;
+    if(PIECE_MAP[def.pieceId].isFlag){ showWin(atk.player); return; }
+  } else if(result==='defender'){
+    state.captured[def.player].push(atk.pieceId);
+    state.board[fr][fc]=null;
+    if(PIECE_MAP[atk.pieceId].isFlag){ showWin(def.player); return; }
+  } else {
+    // tie: both removed
+    state.board[fr][fc]=null;
+    state.board[tr][tc]=null;
+  }
+  endTurn();
+}
+
+function endTurn(){
+  state.currentPlayer=state.currentPlayer===1?2:1;
+  updateTurnBadge();
+  renderPlayBoard();
+  setStatus('駒を選んでください');
+}
+
+function updateTurnBadge(){
+  const cp=state.currentPlayer;
+  const badge=document.getElementById('turn-badge');
+  badge.textContent=`P${cp}の番`;
+  badge.className='turn-indicator';
+  badge.style.background=cp===1?'rgba(204,51,68,.25)':'rgba(51,102,204,.25)';
+  badge.style.border=`1px solid ${cp===1?'var(--p1)':'var(--p2)'}`;
+  badge.style.color=cp===1?'var(--p1)':'var(--p2)';
+}
+
+function renderCaptured(){
+  [1,2].forEach(p=>{
+    const el=document.getElementById('captured-p'+p);
+    el.innerHTML=state.captured[p].map(pid=>
+      `<span class="captured-piece" title="${PIECE_MAP[pid].name}">${PIECE_MAP[pid].emoji}</span>`
+    ).join('');
+  });
+}
+
+function setStatus(msg){
+  document.getElementById('status-msg').textContent=msg;
+}
+
+// ==================== WIN ====================
+function showWin(player){
+  showScreen('screen-win');
+  document.getElementById('win-icon').textContent=player===1?'🏆':'🏆';
+  document.getElementById('win-title').textContent=`P${player} 勝利！`;
+  document.getElementById('win-sub').textContent=
+    `プレイヤー${player}が妖怪の書を手に入れました！`;
+}
+
+// ==================== UTIL ====================
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>{
+    s.classList.toggle('active',s.id===id);
+  });
+}
+
+// ==================== INIT ====================
+buildLegend();
+</script>
+</body>
+</html>
